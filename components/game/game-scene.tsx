@@ -107,14 +107,14 @@ export default function GameScene({
   setPlacedStorageBoxes,
 }: GameSceneProps) {
   const { scene, camera } = useThree()
-  const { bulletTrails } = useGameContext()
+  const { bulletTrails, setTerrainHeightData, setTerrainSize, terrainHeightData, terrainSize } = useGameContext()
   const { gameStatus } = useGameState()
   const { settings } = useSettings()
   const { selectedSlot, items } = useToolbar()
   const { isOpen: isInventoryOpen } = useInventory()
   const { campfires } = useCampfire()
   const { storageBoxes } = useStorageBox()
-  const [terrainHeightData, setTerrainHeightData] = useState<number[][]>([])
+  const [localTerrainHeightData, setLocalTerrainHeightData] = useState<number[][]>([])
   const [spawnPoint, setSpawnPoint] = useState<THREE.Vector3>(new THREE.Vector3(0, 2, 0))
   const [walls, setWalls] = useState<any[]>([])
   const [terrainReady, setTerrainReady] = useState(false)
@@ -230,7 +230,7 @@ export default function GameScene({
 
     // Get height data for collision detection
     const heightData = generator.getTerrainHeightData()
-    setTerrainHeightData(heightData)
+    setLocalTerrainHeightData(heightData)
     console.log("Terrain generated with height data size:", heightData.length)
 
     return { terrainGeometry, waterGeometry, terrainParams: params }
@@ -266,7 +266,7 @@ export default function GameScene({
 
   // Find a suitable spawn point on the terrain
   useEffect(() => {
-    if (!terrainHeightData || terrainHeightData.length === 0) {
+    if (!localTerrainHeightData || localTerrainHeightData.length === 0) {
       console.log("No terrain height data available yet")
       return
     }
@@ -280,8 +280,8 @@ export default function GameScene({
     }
 
     // Try to find a relatively flat area near the center
-    const centerX = Math.floor(terrainHeightData[0].length / 2)
-    const centerZ = Math.floor(terrainHeightData.length / 2)
+    const centerX = Math.floor(localTerrainHeightData[0].length / 2)
+    const centerZ = Math.floor(localTerrainHeightData.length / 2)
     const searchRadius = 20 // Increased from 10 to 20 for the larger map
 
     let bestSpawnX = centerX
@@ -299,13 +299,13 @@ export default function GameScene({
           const z = centerZ + dz
 
           // Check if coordinates are within bounds
-          if (x < 0 || x >= terrainHeightData[0].length || z < 0 || z >= terrainHeightData.length) {
+          if (x < 0 || x >= localTerrainHeightData[0].length || z < 0 || z >= localTerrainHeightData.length) {
             continue
           }
 
           // Check flatness by sampling nearby points
           let maxDiff = 0
-          const centerHeight = terrainHeightData[z][x]
+          const centerHeight = localTerrainHeightData[z][x]
 
           // Check surrounding points
           for (let nx = -1; nx <= 1; nx++) {
@@ -315,11 +315,11 @@ export default function GameScene({
 
               if (
                 neighborX >= 0 &&
-                neighborX < terrainHeightData[0].length &&
+                neighborX < localTerrainHeightData[0].length &&
                 neighborZ >= 0 &&
-                neighborZ < terrainHeightData.length
+                neighborZ < localTerrainHeightData.length
               ) {
-                const neighborHeight = terrainHeightData[neighborZ][neighborX]
+                const neighborHeight = localTerrainHeightData[neighborZ][neighborX]
                 const diff = Math.abs(neighborHeight - centerHeight)
                 maxDiff = Math.max(maxDiff, diff)
               }
@@ -343,25 +343,31 @@ export default function GameScene({
     }
 
     // Convert grid coordinates to world coordinates
-    const worldX = bestSpawnX - terrainHeightData[0].length / 2
-    const worldZ = bestSpawnZ - terrainHeightData.length / 2
+    const worldX = bestSpawnX - localTerrainHeightData[0].length / 2
+    const worldZ = bestSpawnZ - localTerrainHeightData.length / 2
 
     // Get terrain height at spawn point
-    const terrainHeight = terrainHeightData[bestSpawnZ][bestSpawnX]
+    const terrainHeight = localTerrainHeightData[bestSpawnZ][bestSpawnX]
 
     // Set spawn point just above the ground (player height + small offset)
     const PLAYER_HEIGHT = 1.7
     const SPAWN_OFFSET = 0.5 // Small offset to ensure player is above ground
     const worldY = terrainHeight + PLAYER_HEIGHT + SPAWN_OFFSET
 
-    // Set spawn point
+  // Set spawn point
     const newSpawnPoint = new THREE.Vector3(worldX, worldY, worldZ)
     setSpawnPoint(newSpawnPoint)
     setTerrainReady(true)
+    
+    // Update game context with terrain data
+    if (terrainParams) {
+      setTerrainHeightData(localTerrainHeightData)
+      setTerrainSize({ width: terrainParams.width, depth: terrainParams.depth })
+    }
 
     console.log(`Spawn point set at (${worldX.toFixed(2)}, ${worldY.toFixed(2)}, ${worldZ.toFixed(2)})`)
     console.log(`Terrain height at spawn: ${terrainHeight.toFixed(2)}, spawn height: ${worldY.toFixed(2)}`)
-  }, [terrainHeightData, terrainParams])
+  }, [localTerrainHeightData, terrainParams, setTerrainHeightData, setTerrainSize])
 
   // Create walls for collision (boundary walls)
   const boundaryWalls = useMemo(() => {
@@ -449,7 +455,7 @@ export default function GameScene({
       return (
         <CampfirePlacer
           isLocked={isLocked}
-          terrainHeightData={terrainHeightData}
+          terrainHeightData={terrainHeightData || localTerrainHeightData}
           placedCampfires={effectiveItemManager.items.campfire.map((item) => ({
             id: item.id,
             position: item.position,
@@ -462,7 +468,7 @@ export default function GameScene({
       return (
         <StorageBoxPlacer
           isLocked={isLocked}
-          terrainHeightData={terrainHeightData}
+          terrainHeightData={terrainHeightData || localTerrainHeightData}
           placedStorageBoxes={effectiveItemManager.items.storage_box.map((item) => ({
             id: item.id,
             position: item.position,
@@ -472,7 +478,7 @@ export default function GameScene({
         />
       )
     } else if (currentItem.id.startsWith("item_door")) {
-      return <DoorPlacer isLocked={isLocked} terrainHeightData={terrainHeightData} />
+      return <DoorPlacer isLocked={isLocked} terrainHeightData={terrainHeightData || localTerrainHeightData} />
     }
 
     console.warn(`Unknown item type: ${currentItem.id}`)
@@ -549,16 +555,16 @@ export default function GameScene({
       )}
 
       {/* Trees - only render when terrain is ready */}
-      {terrainReady && terrainHeightData.length > 0 && terrainParams && (
+      {terrainReady && (terrainHeightData?.length > 0 || localTerrainHeightData.length > 0) && terrainParams && (
         <>
           <Trees
-            terrainHeightData={terrainHeightData}
+            terrainHeightData={terrainHeightData || localTerrainHeightData}
             terrainSize={{ width: terrainParams.width, depth: terrainParams.depth }}
             waterLevel={waterLevel}
             maxRenderDistance={maxRenderDistance}
           />
           <StoneNodes
-            terrainHeightData={terrainHeightData}
+            terrainHeightData={terrainHeightData || localTerrainHeightData}
             terrainSize={{ width: terrainParams.width, depth: terrainParams.depth }}
             waterLevel={waterLevel}
             maxRenderDistance={maxRenderDistance}
@@ -578,12 +584,12 @@ export default function GameScene({
       ))}
 
       {/* Player - only render when terrain is ready and spawn point is set */}
-      {terrainReady && terrainHeightData.length > 0 && (
+      {terrainReady && (terrainHeightData?.length > 0 || localTerrainHeightData.length > 0) && (
         <Player
           keys={keys}
           isLocked={isLocked && gameStatus === "playing"}
           walls={walls}
-          terrainHeightData={terrainHeightData}
+          terrainHeightData={terrainHeightData || localTerrainHeightData}
           spawnPoint={spawnPoint}
           trees={[]} // Trees are handled separately
           stones={[]} // Stones are handled separately

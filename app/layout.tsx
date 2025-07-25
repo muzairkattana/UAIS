@@ -5,9 +5,9 @@ import "./globals.css"
 import { Analytics } from "@vercel/analytics/react"
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.dev",
+  title: "U⁵AI²S⁶ - UZAIRAISTUDIO",
+  description: "Adventure survival game by UZAIR AI STUDIO",
+  generator: "UZAIRAISTUDIO",
 }
 
 export default function RootLayout({
@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" style={{ margin: 0, padding: 0, width: '100%', height: '100%' }}>
+      <body style={{ margin: 0, padding: 0, width: '100vw', height: '100vh', overflow: 'hidden' }}>
         {children}
         <Suspense fallback={null}>
           <Analytics />

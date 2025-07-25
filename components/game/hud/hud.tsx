@@ -8,9 +8,12 @@ import CraftingGrid from "./crafting-grid"
 import StatusBars from "./status-bars"
 import CampfireInventory from "../ui/campfire-inventory"
 import InteractionPrompt from "./interaction-prompt"
+import Minimap from "./minimap"
 import { useInventory } from "@/lib/inventory-context"
 import { useCrafting } from "@/lib/crafting-context"
 import { useInteraction } from "@/lib/interaction-context"
+import { useGameState } from "@/lib/game-context"
+import * as THREE from "three"
 
 interface HUDProps {
   isLocked: boolean
@@ -36,6 +39,7 @@ export default function HUD({
   const { isOpen: isInventoryOpen, activeCampfire, inventoryOpenedBy } = useInventory()
   const { setIsOpen: setCraftingOpen } = useCrafting()
   const { showPrompt, promptMessage } = useInteraction()
+  const { playerPosition, playerRotation, terrainHeightData, terrainSize, treeInstances, stoneInstances, placedItems } = useGameState()
 
   // When inventory is opened or closed, also open or close crafting, but only if opened via Tab
   useEffect(() => {
@@ -64,6 +68,19 @@ export default function HUD({
 
       {/* Crafting - only show when inventory opened via Tab */}
       <CraftingGrid visible={isInventoryOpen && inventoryOpenedBy === "tab"} />
+
+      {/* Minimap - always show when playing and not in inventory */}
+      {isLocked && !isInventoryOpen && terrainReady && (
+        <Minimap
+          terrainHeightData={terrainHeightData}
+          terrainSize={terrainSize}
+          playerPosition={new THREE.Vector3(playerPosition.x, playerPosition.y, playerPosition.z)}
+          playerRotation={playerRotation}
+          trees={treeInstances}
+          stones={stoneInstances}
+          placedItems={placedItems}
+        />
+      )}
 
       {/* Campfire inventory - show when active campfire is set */}
       {activeCampfire && <CampfireInventory campfireId={activeCampfire} onClose={() => {}} />}

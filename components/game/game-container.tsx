@@ -2,8 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Canvas } from "@react-three/fiber"
-import { Stats } from "@react-three/drei"
+import CanvasWrapper from "./canvas-wrapper"
 import GameScene from "./game-scene"
 import LoadingScreen from "./ui/loading-screen"
 import TitlePage from "./ui/title-page"
@@ -15,7 +14,7 @@ import CampfireInventory from "./ui/campfire-inventory"
 import NotificationContainer from "./ui/notification-container"
 import DebugPanel from "./ui/debug-panel"
 import FPSCounter from "./ui/fps-counter"
-import SoundManager from "@/lib/sound-manager"
+// import SoundManager from "@/lib/sound-manager"
 import AudioGenerator from "./audio/audio-generator"
 import { GameProvider } from "@/lib/game-context"
 import { SettingsProvider, useSettings } from "@/lib/settings-context"
@@ -33,10 +32,22 @@ import { InteractionProvider } from "@/lib/interaction-context"
 import { ItemManagerProvider } from "@/lib/item-manager-context"
 
 // Initialize sound manager early - but only in browser
-const soundManager = typeof window !== "undefined" ? SoundManager.getInstance() : null
-if (typeof window !== "undefined" && soundManager) {
-  soundManager.init()
-  soundManager.warmup()
+let soundManager: any = null
+if (typeof window !== "undefined") {
+  try {
+    // Dynamically import SoundManager to avoid SSR issues
+    import("@/lib/sound-manager").then((module) => {
+      soundManager = module.default.getInstance()
+      if (soundManager) {
+        soundManager.init()
+        soundManager.warmup()
+      }
+    }).catch((error) => {
+      console.warn("Sound manager initialization failed:", error)
+    })
+  } catch (error) {
+    console.warn("Sound manager initialization failed:", error)
+  }
 }
 
 function GameContainerInner() {
@@ -189,10 +200,16 @@ function GameContainerInner() {
       return
     }
 
-    // Get the canvas element
-    const canvas = canvasElement || document.querySelector("canvas")
+    // Always query fresh canvas element to avoid stale references
+    const canvas = document.querySelector("canvas") as HTMLCanvasElement
     if (!canvas) {
-      console.error("Canvas element not found")
+      console.error("Canvas element not found in DOM")
+      return
+    }
+
+    // Verify canvas is still attached to DOM
+    if (!document.body.contains(canvas)) {
+      console.error("Canvas element is not attached to DOM")
       return
     }
 
@@ -206,9 +223,9 @@ function GameContainerInner() {
       // Try to request pointer lock with proper error handling
       if (canvas.requestPointerLock) {
         // Modern browsers - use Promise-based approach if available
-        if (typeof canvas.requestPointerLock().then === "function") {
-          canvas
-            .requestPointerLock()
+        const lockPromise = canvas.requestPointerLock()
+        if (lockPromise && typeof lockPromise.then === "function") {
+          lockPromise
             .then(() => {
               console.log("Pointer lock successfully acquired")
               setIsLocked(true)
@@ -221,7 +238,7 @@ function GameContainerInner() {
             })
         } else {
           // Fallback for browsers without Promise support
-          canvas.requestPointerLock()
+          console.log("Using non-promise pointer lock request")
         }
       } else if ((canvas as any).mozRequestPointerLock) {
         // Firefox fallback
@@ -623,8 +640,9 @@ function GameContainerInner() {
     if (gameStatus === "playing" || gameStatus === "sleeping") {
       return (
         <>
-          <div ref={canvasRef} className="w-full h-full" onClick={handleCanvasClick} onWheel={handleCanvasWheel}>
-            <Canvas
+          <div ref={canvasRef}>
+            <CanvasWrapper
+              showStats={showDebug}
               shadows={settings.graphics.enableShadows}
               camera={{ fov: settings.gameplay.fov, near: 0.1, far: 1000 }}
               gl={{
@@ -637,9 +655,11 @@ function GameContainerInner() {
               }}
               performance={{ min: 0.5 }}
               dpr={settings.graphics.quality === "low" ? 0.8 : settings.graphics.quality === "medium" ? 1 : 1.5}
+              onClick={handleCanvasClick}
+              onWheel={handleCanvasWheel}
             >
               <GameScene
-                isLocked={isLocked && gameStatus === "playing" && !isInventoryOpen} // Only pass isLocked as true if in playing state and inventory closed
+                isLocked={isLocked && gameStatus === "playing" && !isInventoryOpen}
                 setIsLocked={setIsLocked}
                 onTerrainReady={handleTerrainReady}
                 maxRenderDistance={settings.graphics.maxRenderDistance}
@@ -657,8 +677,7 @@ function GameContainerInner() {
                 placedStorageBoxes={placedStorageBoxes}
                 setPlacedStorageBoxes={setPlacedStorageBoxes}
               />
-              {showDebug && <Stats />}
-            </Canvas>
+            </CanvasWrapper>
           </div>
 
           {/* Show wake up screen if in sleeping state */}
@@ -737,7 +756,7 @@ function GameContainerInner() {
   }
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full" style={{ width: '100vw', height: '100vh', margin: 0, padding: 0 }}>
       {/* Audio generator for fallback sounds - render this first */}
       <AudioGenerator />
       {/* Render SoundTest component */}

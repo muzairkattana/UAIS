@@ -10,18 +10,67 @@ export interface BulletTrail {
   intensity?: number // Added intensity property
 }
 
+export interface TreeInstance {
+  id: string
+  position: THREE.Vector3
+  height: number
+  scale: number
+  type: number
+  health: number
+  maxHealth: number
+  visible: boolean
+}
+
+export interface StoneInstance {
+  id: string
+  position: THREE.Vector3
+  type: number
+  health: number
+  maxHealth: number
+  visible: boolean
+}
+
+export interface PlacedItem {
+  id: string
+  position: THREE.Vector3
+  type: string
+  data?: any
+}
+
 interface GameState {
   playerPosition: { x: number; y: number; z: number }
   setPlayerPosition: (position: { x: number; y: number; z: number }) => void
+  playerRotation: number
+  setPlayerRotation: (rotation: number) => void
+  terrainHeightData: number[][]
+  setTerrainHeightData: (data: number[][]) => void
+  terrainSize: { width: number; depth: number }
+  setTerrainSize: (size: { width: number; depth: number }) => void
   bulletTrails: BulletTrail[]
   addBulletTrail: (trail: BulletTrail) => void
+  treeInstances: TreeInstance[]
+  setTreeInstances: (trees: TreeInstance[]) => void
+  stoneInstances: StoneInstance[]
+  setStoneInstances: (stones: StoneInstance[]) => void
+  placedItems: PlacedItem[]
+  setPlacedItems: (items: PlacedItem[]) => void
+  isPaused: boolean
+  setIsPaused: (paused: boolean) => void
+  togglePause: () => void
 }
 
 const GameContext = createContext<GameState | null>(null)
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.7, z: 0 })
+  const [playerRotation, setPlayerRotation] = useState(0)
+  const [terrainHeightData, setTerrainHeightData] = useState<number[][]>([])
+  const [terrainSize, setTerrainSize] = useState({ width: 400, depth: 400 })
   const [bulletTrails, setBulletTrails] = useState<BulletTrail[]>([])
+  const [treeInstances, setTreeInstances] = useState<TreeInstance[]>([])
+  const [stoneInstances, setStoneInstances] = useState<StoneInstance[]>([])
+  const [placedItems, setPlacedItems] = useState<PlacedItem[]>([])
+  const [isPaused, setIsPaused] = useState(false)
 
   // Use useCallback to prevent unnecessary re-renders
   const addBulletTrail = useCallback((trail: BulletTrail) => {
@@ -35,13 +84,32 @@ export function GameProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const togglePause = useCallback(() => {
+    setIsPaused(prev => !prev)
+  }, [])
+
   return (
     <GameContext.Provider
       value={{
         playerPosition,
         setPlayerPosition,
+        playerRotation,
+        setPlayerRotation,
+        terrainHeightData,
+        setTerrainHeightData,
+        terrainSize,
+        setTerrainSize,
         bulletTrails,
         addBulletTrail,
+        treeInstances,
+        setTreeInstances,
+        stoneInstances,
+        setStoneInstances,
+        placedItems,
+        setPlacedItems,
+        isPaused,
+        setIsPaused,
+        togglePause,
       }}
     >
       {children}

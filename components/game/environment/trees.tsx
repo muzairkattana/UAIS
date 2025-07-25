@@ -17,7 +17,7 @@ interface TreesProps {
 }
 
 export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxRenderDistance = 150 }: TreesProps) {
-  const { playerPosition } = useGameState()
+  const { playerPosition, treeInstances, setTreeInstances } = useGameState()
   const { camera } = useThree()
   const soundManager = useSoundManager()
   const { addItem } = useInventory()
@@ -30,9 +30,6 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
 
   // Track if trees have been initialized
   const initialized = useRef(false)
-
-  // State for tree instances (need to use state to trigger re-renders when trees are chopped)
-  const [treeInstances, setTreeInstances] = useState<TreeInstance[]>([])
 
   // Generate trees only once
   useEffect(() => {
@@ -314,8 +311,8 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
     initialized.current = true
   }, [treeInstances])
 
-  // Visibility culling based on distance from player
-  useFrame(() => {
+  // Improved visibility culling based on camera frustum and distance
+  useFrame((state, delta) => {
     if (
       !trunkRef.current ||
       !foliageRef.current ||
@@ -326,8 +323,8 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
       return
     }
 
-    // Only update every few frames for performance
-    if (Math.random() > 0.05) return
+    // Only update occasionally for performance and stability
+    if (Math.random() > 0.01) return
 
     const playerPos = new THREE.Vector3(playerPosition.x, playerPosition.y, playerPosition.z)
     const tempMatrix = new THREE.Matrix4()
@@ -335,8 +332,17 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
     const tempScale = new THREE.Vector3()
     const tempRotation = new THREE.Quaternion()
 
-    // Maximum distance for tree visibility - use the provided maxRenderDistance
-    const maxDistanceSq = maxRenderDistance * maxRenderDistance
+    // More generous maximum distance with larger buffer to prevent sudden disappearing
+    const maxDistance = maxRenderDistance * 1.5 // 50% buffer for stability
+    const maxDistanceSq = maxDistance * maxDistance
+    
+    // Create frustum with expanded near/far planes for stability
+    const frustum = new THREE.Frustum()
+    const expandedCamera = camera.clone()
+    expandedCamera.far = Math.max(camera.far, maxDistance * 1.2)
+    expandedCamera.updateProjectionMatrix()
+    const cameraMatrix = new THREE.Matrix4().multiplyMatrices(expandedCamera.projectionMatrix, expandedCamera.matrixWorldInverse)
+    frustum.setFromProjectionMatrix(cameraMatrix)
 
     // Check each tree
     treeInstances.forEach((tree, i) => {
@@ -353,21 +359,27 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
       trunkRef.current!.getMatrixAt(i, tempMatrix)
       tempMatrix.decompose(tempPosition, tempRotation, tempScale)
 
-      // If tree is too far, scale it to 0 to hide it
-      if (distSq > maxDistanceSq) {
-        if (tempScale.x !== 0) {
-          // Hide the tree
-          tempScale.set(0, 0, 0)
-          tempMatrix.compose(tempPosition, tempRotation, tempScale)
-          trunkRef.current!.setMatrixAt(i, tempMatrix)
-          foliageRef.current!.setMatrixAt(i, tempMatrix)
-          foliage2Ref.current!.setMatrixAt(i, tempMatrix)
+      // Check if tree should be visible
+      // Create a bounding sphere for the tree (generous size to prevent pop-in)
+      const treeBoundingSphere = new THREE.Sphere(tree.position, tree.height * tree.scale * 2)
+      const isInFrustum = frustum.intersectsSphere(treeBoundingSphere)
+      
+      // Tree should be visible if it's within distance OR in the camera frustum (to prevent pop-in/pop-out)
+      const shouldBeVisible = distSq <= maxDistanceSq || isInFrustum
 
-          trunkRef.current!.instanceMatrix.needsUpdate = true
-          foliageRef.current!.instanceMatrix.needsUpdate = true
-          foliage2Ref.current!.instanceMatrix.needsUpdate = true
-        }
-      } else if (tempScale.x === 0) {
+      // If tree should be hidden and is currently visible
+      if (!shouldBeVisible && tempScale.x !== 0) {
+        // Hide the tree
+        tempScale.set(0, 0, 0)
+        tempMatrix.compose(tempPosition, tempRotation, tempScale)
+        trunkRef.current!.setMatrixAt(i, tempMatrix)
+        foliageRef.current!.setMatrixAt(i, tempMatrix)
+        foliage2Ref.current!.setMatrixAt(i, tempMatrix)
+
+        trunkRef.current!.instanceMatrix.needsUpdate = true
+        foliageRef.current!.instanceMatrix.needsUpdate = true
+        foliage2Ref.current!.instanceMatrix.needsUpdate = true
+      } else if (shouldBeVisible && tempScale.x === 0) {
         // Tree is in range but hidden, show it again
         // We need to recalculate its matrix
 
@@ -488,18 +500,26 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
 
   return (
     <>
-      <instancedMesh ref={trunkRef} args={[trunkGeometry, trunkMaterial, instanceCount]} castShadow receiveShadow />
+      <instancedMesh 
+        ref={trunkRef} 
+        args={[trunkGeometry, trunkMaterial, instanceCount]} 
+        castShadow 
+        receiveShadow 
+        frustumCulled={false}
+      />
       <instancedMesh
         ref={foliageRef}
         args={[foliageGeometry, foliageMaterial, instanceCount]}
         castShadow
         receiveShadow
+        frustumCulled={false}
       />
       <instancedMesh
         ref={foliage2Ref}
         args={[foliageGeometry2, foliageMaterial2, instanceCount]}
         castShadow
         receiveShadow
+        frustumCulled={false}
       />
     </>
   )
