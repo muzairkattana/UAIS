@@ -43,13 +43,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [initialized, setInitialized] = useState(false)
 
-  // Load settings from localStorage on initial render - only in browser
+  // Load settings from localStorage on initial render
   useEffect(() => {
-    if (typeof window === "undefined") {
-      setInitialized(true)
-      return
-    }
-    
     try {
       const savedSettings = localStorage.getItem("webgo-settings")
       if (savedSettings) {
@@ -71,14 +66,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setInitialized(true)
   }, [])
 
-  // Save settings to localStorage whenever they change - only in browser
+  // Save settings to localStorage whenever they change
   useEffect(() => {
-    if (initialized && typeof window !== "undefined") {
-      try {
-        localStorage.setItem("webgo-settings", JSON.stringify(settings))
-      } catch (error) {
-        console.error("Failed to save settings:", error)
-      }
+    if (initialized) {
+      localStorage.setItem("webgo-settings", JSON.stringify(settings))
     }
   }, [settings, initialized])
 

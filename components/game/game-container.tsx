@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Canvas } from "@react-three/fiber"
-// import { Stats } from "@react-three/drei"
+import { Stats } from "@react-three/drei"
 import GameScene from "./game-scene"
 import LoadingScreen from "./ui/loading-screen"
 import TitlePage from "./ui/title-page"
@@ -132,7 +132,7 @@ function GameContainerInner() {
   useEffect(() => {
     const findCanvas = () => {
       const canvas = document.querySelector("canvas")
-      if (canvas && canvas.isConnected) {
+      if (canvas) {
         setCanvasElement(canvas)
         console.log("Canvas element found and stored")
       } else {
@@ -189,17 +189,10 @@ function GameContainerInner() {
       return
     }
 
-    // Get the canvas element and verify it's connected to DOM
+    // Get the canvas element
     const canvas = canvasElement || document.querySelector("canvas")
     if (!canvas) {
       console.error("Canvas element not found")
-      return
-    }
-    
-    // Check if canvas is still connected to the DOM
-    if (!canvas.isConnected) {
-      console.error("Canvas element is not connected to DOM")
-      setCanvasElement(null) // Clear the stored reference
       return
     }
 
@@ -664,7 +657,7 @@ function GameContainerInner() {
                 placedStorageBoxes={placedStorageBoxes}
                 setPlacedStorageBoxes={setPlacedStorageBoxes}
               />
-              {/* {showDebug && <Stats />} */}
+              {showDebug && <Stats />}
             </Canvas>
           </div>
 
