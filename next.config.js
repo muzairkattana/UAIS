@@ -1,40 +1,31 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Optimize package imports for better tree shaking
   experimental: {
     optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei'],
   },
+  
+  // Simple webpack config without babel-loader
   webpack: (config, { isServer }) => {
-    // Optimize for faster builds
+    // Only add fallbacks for client-side builds
     if (!isServer) {
       config.resolve.fallback = {
         fs: false,
         path: false,
       }
     }
-    
-    // Tree shaking for three.js
-    config.module.rules.push({
-      test: /\.js$/,
-      include: /node_modules\/three/,
-      use: {
-        loader: 'babel-loader',
-        options: {
-          presets: ['@babel/preset-env'],
-        },
-      },
-    })
-    
     return config
   },
-  // Enable SWC minification for faster builds
+  
+  // Use SWC for faster builds (default in Next.js 13+)
   swcMinify: true,
   
   // Optimize images
   images: {
-    unoptimized: true // Since you're using static assets
+    unoptimized: true
   },
   
-  // Reduce bundle analysis overhead
+  // Disable source maps for faster builds
   productionBrowserSourceMaps: false,
 }
 
