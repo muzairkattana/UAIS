@@ -15,8 +15,8 @@ interface GameStateContextType {
 const GameStateContext = createContext<GameStateContextType | null>(null)
 
 export function GameStateProvider({ children }: { children: ReactNode }) {
-  const [gameStatus, setGameStatus] = useState<GameStatus>("playing")
-  const [hasStarted, setHasStarted] = useState(true)
+  const [gameStatus, setGameStatus] = useState<GameStatus>("title")
+  const [hasStarted, setHasStarted] = useState(false)
 
   return (
     <GameStateContext.Provider
