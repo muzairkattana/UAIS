@@ -5,7 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { useGameState } from "@/lib/game-context"
 import SoundManager from "@/lib/sound-manager"
-import type { TreeInstance } from "@/lib/tree-generator"
+import type { TreeInstance } from "@/types/tree-instance"
 
 interface HatchetProps {
   isLocked: boolean

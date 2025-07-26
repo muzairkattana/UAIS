@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
 import type * as THREE from "three"
+import type { TreeInstance } from "@/types/tree-instance"
 
 export interface BulletTrail {
   start: THREE.Vector3
@@ -10,16 +11,7 @@ export interface BulletTrail {
   intensity?: number // Added intensity property
 }
 
-export interface TreeInstance {
-  id: string
-  position: THREE.Vector3
-  height: number
-  scale: number
-  type: number
-  health: number
-  maxHealth: number
-  visible: boolean
-}
+// TreeInstance is now imported from common types file
 
 export interface StoneInstance {
   id: string
