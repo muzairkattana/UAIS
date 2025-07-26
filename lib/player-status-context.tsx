@@ -9,6 +9,9 @@ interface PlayerStatusContextType {
   maxFood: number
   water: number
   maxWater: number
+  // Aliases for consistency with other parts of the codebase
+  hydration: number // Alias for water
+  hunger: number // Derived from food (100 - food for hunger scale)
   setHealth: (value: number) => void
   setFood: (value: number) => void
   setWater: (value: number) => void
@@ -16,6 +19,7 @@ interface PlayerStatusContextType {
   heal: (amount: number) => void
   consumeFood: (amount: number) => void
   consumeWater: (amount: number) => void
+  updateStatus?: (status: { health?: number; hydration?: number; hunger?: number }) => void
 }
 
 const PlayerStatusContext = createContext<PlayerStatusContextType | null>(null)
@@ -70,6 +74,20 @@ export function PlayerStatusProvider({ children }: { children: ReactNode }) {
     setWater((prev) => Math.min(maxWater, prev + amount))
   }
 
+  // Update status function for external updates
+  const updateStatus = (status: { health?: number; hydration?: number; hunger?: number }) => {
+    if (status.health !== undefined) {
+      setHealth(status.health)
+    }
+    if (status.hydration !== undefined) {
+      setWater(status.hydration)
+    }
+    if (status.hunger !== undefined) {
+      // Convert hunger to food (inverse relationship)
+      setFood(100 - status.hunger)
+    }
+  }
+
   return (
     <PlayerStatusContext.Provider
       value={{
@@ -79,6 +97,9 @@ export function PlayerStatusProvider({ children }: { children: ReactNode }) {
         maxFood,
         water,
         maxWater,
+        // Aliases for consistency
+        hydration: water,
+        hunger: Math.max(0, 100 - food), // Hunger is inverse of food
         setHealth,
         setFood,
         setWater,
@@ -86,6 +107,7 @@ export function PlayerStatusProvider({ children }: { children: ReactNode }) {
         heal,
         consumeFood,
         consumeWater,
+        updateStatus,
       }}
     >
       {children}
