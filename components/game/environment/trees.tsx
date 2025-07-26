@@ -332,6 +332,7 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
     const tempPosition = new THREE.Vector3()
     const tempScale = new THREE.Vector3()
     const tempRotation = new THREE.Quaternion()
+    const tempEuler = new THREE.Euler()
 
     // More generous maximum distance with larger buffer to prevent sudden disappearing
     const maxDistance = maxRenderDistance * 1.5 // 50% buffer for stability
@@ -422,7 +423,7 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
         tempPosition.y += trunkHeight / 2 // Move up to half height
         tempScale.set(trunkRadius, trunkHeight, trunkRadius)
 
-        tempMatrix.compose(tempPosition, new THREE.Quaternion().setFromEuler(tempRotation), tempScale)
+        tempMatrix.compose(tempPosition, new THREE.Quaternion().setFromEuler(tree.rotation), tempScale)
         trunkRef.current!.setMatrixAt(i, tempMatrix)
 
         // Set foliage instance based on tree type
