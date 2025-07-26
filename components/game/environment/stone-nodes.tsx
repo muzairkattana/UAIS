@@ -73,19 +73,16 @@ export default function StoneNodes({
         color: 0x777777, // Gray
         roughness: 0.9,
         metalness: 0.1,
-        frustumCulled: false, // Disable frustum culling
       }),
       new THREE.MeshStandardMaterial({
         color: 0x8b8878, // Darker gray with brown tint
         roughness: 0.8,
         metalness: 0.2,
-        frustumCulled: false, // Disable frustum culling
       }),
       new THREE.MeshStandardMaterial({
         color: 0x696969, // Dark gray
         roughness: 0.7,
         metalness: 0.3,
-        frustumCulled: false, // Disable frustum culling
       }),
     ]
   }, [])
@@ -112,7 +109,7 @@ export default function StoneNodes({
           // Create a stone item with exactly 20 quantity
           const stoneItem = {
             id: `stone_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-            type: "resource",
+            type: "item" as const,
             name: "Stone",
             icon: "/stone.png", // Updated path
             quantity: 20, // Explicitly set to 20
