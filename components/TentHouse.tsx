@@ -8,7 +8,7 @@ const TentHouse = ({ position = [20, 0, 5] }) => {
   const [lanternOn, setLanternOn] = useState(true);
   const [chestOpen, setChestOpen] = useState(false);
 
-  const lanternRef = useRef();
+  const lanternRef = useRef<THREE.PointLight | null>(null);
   const fireRef = useRef();
 
   // Physics collision box for the tent
