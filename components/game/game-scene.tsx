@@ -5,6 +5,7 @@ import type React from "react"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { useThree } from "@react-three/fiber"
 import { PointerLockControls } from "@react-three/drei"
+import { Physics } from "@react-three/cannon"
 import * as THREE from "three"
 
 import Player from "./player/player"
@@ -38,8 +39,24 @@ import DoorPlacer from "./tools/door-placer"
 import CampfireInteraction from "./items/campfire-interaction"
 import StorageBoxInteraction from "./items/storage-box-interaction"
 import Door from "./items/door"
+import House from "./items/house"
+import HouseInteraction from "./items/house-interaction"
+import AdvancedHouseInteraction from "./items/advanced-house-interaction"
+import { findBestHouseLocation } from "./utils/house-placement"
+
+// Import different house types for village
+import { CabinHouse } from '../../src/components/CabinHouse';
+import { HutHouse } from '../../src/components/HutHouse';
+import StoneHouse from '../../src/components/game/StoneHouse';
+import TentHouse from '../TentHouse';
 import StorageBox from "./items/storage-box"
 import Campfire from "./items/campfire"
+
+// Import enemy components
+import ForestGoblin from "./enemies/ForestGoblin"
+import SwampCrawler from "./enemies/SwampCrawler"
+import ShadowBandit from "./enemies/ShadowBandit"
+import RockGolem from "./enemies/RockGolem"
 
 export const MAX_RENDER_DISTANCE = 150
 
@@ -118,6 +135,14 @@ export default function GameScene({
   const [spawnPoint, setSpawnPoint] = useState<THREE.Vector3>(new THREE.Vector3(0, 2, 0))
   const [walls, setWalls] = useState<any[]>([])
   const [terrainReady, setTerrainReady] = useState(false)
+  const [houseLocation, setHouseLocation] = useState<{ position: THREE.Vector3; rotation: number } | null>(null)
+  const [villageHouses, setVillageHouses] = useState<Array<{
+    id: string
+    type: 'cabin' | 'hut' | 'stone' | 'tent'
+    position: THREE.Vector3
+    rotation: number
+  }>>([])
+  const [isDoorOpen, setIsDoorOpen] = useState(false)
   const [keys, setKeys] = useState({
     KeyW: false,
     KeyS: false,
@@ -367,7 +392,126 @@ export default function GameScene({
 
     console.log(`Spawn point set at (${worldX.toFixed(2)}, ${worldY.toFixed(2)}, ${worldZ.toFixed(2)})`)
     console.log(`Terrain height at spawn: ${terrainHeight.toFixed(2)}, spawn height: ${worldY.toFixed(2)}`)
-  }, [localTerrainHeightData, terrainParams, setTerrainHeightData, setTerrainSize])
+    
+    // Find and place village houses after spawn point is set
+    if (terrainParams && villageHouses.length === 0) {
+      const houseTypes: Array<'cabin' | 'hut' | 'stone' | 'tent'> = ['cabin', 'hut', 'stone', 'tent']
+      const placedHouses: Array<{
+        id: string
+        type: 'cabin' | 'hut' | 'stone' | 'tent'
+        position: THREE.Vector3
+        rotation: number
+      }> = []
+      
+      // Place multiple houses at different distances and angles from spawn
+      const houseDistances = [30, 45, 60, 35] // Different distances from spawn
+      const houseAngles = [0, Math.PI / 2, Math.PI, -Math.PI / 2] // Different angles around spawn
+      
+      for (let i = 0; i < 4; i++) {
+        const distance = houseDistances[i]
+        const angle = houseAngles[i]
+        
+        // Calculate preferred position based on angle and distance from spawn
+        const preferredX = newSpawnPoint.x + Math.cos(angle) * distance
+        const preferredZ = newSpawnPoint.z + Math.sin(angle) * distance
+        const preferredPosition = new THREE.Vector3(preferredX, newSpawnPoint.y, preferredZ)
+        
+        const houseLocationData = findBestHouseLocation(
+          {
+            heightData: localTerrainHeightData,
+            width: terrainParams.width,
+            depth: terrainParams.depth
+          },
+          preferredPosition,
+          {
+            minFlatness: 1.2,
+            minWaterDistance: 15,
+            waterLevel: terrainParams.waterLevel * terrainParams.height + terrainParams.heightOffset,
+            preferredDistance: 10, // Smaller preferred distance since we have a target location
+            searchRadius: 20 // Allow wider search radius to find suitable spots
+          }
+        )
+        
+        if (houseLocationData) {
+          const houseId = `village-house-${i}`
+          placedHouses.push({
+            id: houseId,
+            type: houseTypes[i],
+            position: houseLocationData.position,
+            rotation: houseLocationData.rotation
+          })
+          
+          // Initialize house state
+          setVillageHouseStates(prev => ({
+            ...prev,
+            [houseId]: {
+              doorOpen: false,
+              fireplaceActive: false,
+              cabinetOpen: false
+            }
+          }))
+          
+          console.log(`${houseTypes[i]} house placed at: (${houseLocationData.position.x.toFixed(2)}, ${houseLocationData.position.y.toFixed(2)}, ${houseLocationData.position.z.toFixed(2)})`)
+        } else {
+          console.warn(`Could not find suitable location for ${houseTypes[i]} house`)
+        }
+      }
+      
+      setVillageHouses(placedHouses)
+      console.log(`Village created with ${placedHouses.length} houses`)
+    }
+
+    // Spawn enemies after village is set up
+    if (enemies.length === 0 && terrainParams) {
+      const enemyTypes: Array<'goblin' | 'crawler' | 'bandit' | 'golem'> = ['goblin', 'crawler', 'bandit', 'golem']
+      const spawnedEnemies: Array<{
+        id: string
+        type: 'goblin' | 'crawler' | 'bandit' | 'golem'
+        position: THREE.Vector3
+        isAlive: boolean
+      }> = []
+      
+      // Spawn enemies at various distances and angles from spawn point
+      const enemyDistances = [80, 100, 120, 150] // Further from spawn than houses
+      const enemyAngles = [Math.PI / 4, 3 * Math.PI / 4, -Math.PI / 4, -3 * Math.PI / 4] // Diagonal positions
+      
+      for (let i = 0; i < 4; i++) {
+        const distance = enemyDistances[i]
+        const angle = enemyAngles[i]
+        
+        // Calculate enemy spawn position
+        const enemyX = newSpawnPoint.x + Math.cos(angle) * distance
+        const enemyZ = newSpawnPoint.z + Math.sin(angle) * distance
+        
+        // Convert world coordinates to grid coordinates to get terrain height
+        const gridX = Math.floor(enemyX + localTerrainHeightData[0].length / 2)
+        const gridZ = Math.floor(enemyZ + localTerrainHeightData.length / 2)
+        
+        // Check if coordinates are within bounds
+        if (gridX >= 0 && gridX < localTerrainHeightData[0].length && gridZ >= 0 && gridZ < localTerrainHeightData.length) {
+          const terrainHeight = localTerrainHeightData[gridZ][gridX]
+          const waterHeight = terrainParams.waterLevel * terrainParams.height + terrainParams.heightOffset
+          
+          // Only spawn if above water level
+          if (terrainHeight > waterHeight) {
+            const enemyY = terrainHeight + 1 // Place enemy above ground
+            
+            spawnedEnemies.push({
+              id: `enemy-${enemyTypes[i]}-${i}`,
+              type: enemyTypes[i],
+              position: new THREE.Vector3(enemyX, enemyY, enemyZ),
+              isAlive: true
+            })
+            
+            console.log(`Spawned ${enemyTypes[i]} at: (${enemyX.toFixed(2)}, ${enemyY.toFixed(2)}, ${enemyZ.toFixed(2)})`)
+          }
+        }
+      }
+      
+      setEnemies(spawnedEnemies)
+      console.log(`Spawned ${spawnedEnemies.length} enemies`)
+    }
+  }, [localTerrainHeightData, terrainParams, setTerrainHeightData, setTerrainSize, houseLocation])
 
   // Create walls for collision (boundary walls)
   const boundaryWalls = useMemo(() => {
@@ -478,7 +622,14 @@ export default function GameScene({
         />
       )
     } else if (currentItem.id.startsWith("item_door")) {
-      return <DoorPlacer isLocked={isLocked} terrainHeightData={terrainHeightData || localTerrainHeightData} />
+      return (
+        <DoorPlacer
+          isLocked={isLocked}
+          terrainHeightData={terrainHeightData || localTerrainHeightData}
+          placedDoors={placedDoors}
+          setPlacedDoors={setPlacedDoors}
+        />
+      )
     }
 
     console.warn(`Unknown item type: ${currentItem.id}`)
@@ -518,7 +669,94 @@ export default function GameScene({
     onStorageBoxInteraction(storageBoxId)
   }
 
-  return (
+  // Handle house door interaction
+  const handleHouseDoorToggle = () => {
+    setIsDoorOpen(!isDoorOpen)
+    console.log(`House door ${isDoorOpen ? 'closed' : 'opened'}`)
+  }
+
+  // Advanced house interaction handlers
+  const [fireplaceActive, setFireplaceActive] = useState(false)
+  const [cabinetOpen, setCabinetOpen] = useState(false)
+  const [wardrobeOpen, setWardrobeOpen] = useState(false)
+  
+  // Village house interaction handlers
+  const [villageHouseStates, setVillageHouseStates] = useState<{
+    [houseId: string]: {
+      doorOpen: boolean
+      fireplaceActive: boolean
+      cabinetOpen: boolean
+    }
+  }>({})
+
+  // Enemy spawning state
+  const [enemies, setEnemies] = useState<Array<{
+    id: string
+    type: 'goblin' | 'crawler' | 'bandit' | 'golem'
+    position: THREE.Vector3
+    isAlive: boolean
+  }>>([])
+  const [playerPosition, setPlayerPosition] = useState<THREE.Vector3>(new THREE.Vector3())
+  
+  // Placed doors state
+  const [placedDoors, setPlacedDoors] = useState<Array<{
+    id: string
+    position: [number, number, number]
+    rotation: [number, number, number]
+    normal?: [number, number, number]
+    isOpen?: boolean
+  }>>([])
+
+  const handleFireplaceToggle = () => {
+    setFireplaceActive(!fireplaceActive)
+    console.log(`Fireplace ${fireplaceActive ? 'extinguished' : 'lit'}`)
+  }
+
+  const handleCabinetToggle = () => {
+    setCabinetOpen(!cabinetOpen)
+    console.log(`Kitchen cabinet ${cabinetOpen ? 'closed' : 'opened'}`)
+  }
+
+  const handleWardrobeToggle = () => {
+    setWardrobeOpen(!wardrobeOpen)
+    console.log(`Wardrobe ${wardrobeOpen ? 'closed' : 'opened'}`)
+  }
+  
+  // Village house interaction handlers
+  const handleVillageHouseDoorToggle = (houseId: string) => {
+    setVillageHouseStates(prev => ({
+      ...prev,
+      [houseId]: {
+        ...prev[houseId],
+        doorOpen: !prev[houseId]?.doorOpen
+      }
+    }))
+    console.log(`Village house ${houseId} door ${villageHouseStates[houseId]?.doorOpen ? 'closed' : 'opened'}`)
+  }
+  
+  const handleVillageHouseFireplaceToggle = (houseId: string) => {
+    setVillageHouseStates(prev => ({
+      ...prev,
+      [houseId]: {
+        ...prev[houseId],
+        fireplaceActive: !prev[houseId]?.fireplaceActive
+      }
+    }))
+    console.log(`Village house ${houseId} fireplace ${villageHouseStates[houseId]?.fireplaceActive ? 'extinguished' : 'lit'}`)
+  }
+  
+  const handleVillageHouseCabinetToggle = (houseId: string) => {
+    setVillageHouseStates(prev => ({
+      ...prev,
+      [houseId]: {
+        ...prev[houseId],
+        cabinetOpen: !prev[houseId]?.cabinetOpen
+      }
+    }))
+    console.log(`Village house ${houseId} cabinet ${villageHouseStates[houseId]?.cabinetOpen ? 'closed' : 'opened'}`)
+  }
+
+return (
     <>
       <PointerLockControls ref={controls} />
 
@@ -526,6 +764,8 @@ export default function GameScene({
       <ambientLight intensity={0.6} />
       <directionalLight position={[50, 100, 50]} intensity={1.0} castShadow={settings.graphics?.enableShadows} />
       <directionalLight position={[-50, 50, -50]} intensity={0.5} castShadow={settings.graphics?.enableShadows} />
+
+      <Physics>
 
       {/* Sky color */}
       <color attach="background" args={[skyColor]} />
@@ -669,6 +909,108 @@ export default function GameScene({
           isOpen={door.isOpen || false}
         />
       ))}
+
+      {/* Main House - placed automatically on terrain */}
+      {houseLocation && terrainReady && (
+        <>
+          <House
+            position={[
+              houseLocation.position.x,
+              houseLocation.position.y,
+              houseLocation.position.z
+            ]}
+            rotation={[0, houseLocation.rotation, 0]}
+            id="main-house"
+          />
+          
+          {/* Advanced House Interactions */}
+          <AdvancedHouseInteraction
+            position={[
+              houseLocation.position.x,
+              houseLocation.position.y,
+              houseLocation.position.z
+            ]}
+            onDoorToggle={handleHouseDoorToggle}
+            onFireplaceToggle={handleFireplaceToggle}
+            onCabinetToggle={handleCabinetToggle}
+            onWardrobeToggle={handleWardrobeToggle}
+            disabled={gameStatus !== "playing" || isInventoryOpen}
+            id="main-house"
+          />
+        </>
+      )}
+      
+      {/* Village Houses - render different house types */}
+      {villageHouses.map((house) => {
+        const houseState = villageHouseStates[house.id] || {
+          doorOpen: false,
+          fireplaceActive: false,
+          cabinetOpen: false
+        }
+        
+        const commonProps = {
+          key: house.id,
+          position: [house.position.x, house.position.y, house.position.z] as [number, number, number],
+          rotation: [0, house.rotation, 0] as [number, number, number],
+          isDoorOpen: houseState.doorOpen,
+          isFireplaceActive: houseState.fireplaceActive,
+          isCabinetOpen: houseState.cabinetOpen,
+          onDoorToggle: () => handleVillageHouseDoorToggle(house.id),
+          onFireplaceToggle: () => handleVillageHouseFireplaceToggle(house.id),
+          onCabinetToggle: () => handleVillageHouseCabinetToggle(house.id)
+        }
+        
+        switch (house.type) {
+          case 'cabin':
+            return <CabinHouse {...commonProps} />
+          case 'hut':
+            return <HutHouse {...commonProps} />
+          case 'stone':
+            return <StoneHouse {...commonProps} />
+          case 'tent':
+            return <TentHouse {...commonProps} />
+          default:
+            return null
+        }
+      })}
+      
+      {/* Enemies - render different enemy types */}
+      {enemies.map((enemy) => {
+        if (!enemy.isAlive) return null
+        
+        const enemyProps = {
+          key: enemy.id,
+          position: [enemy.position.x, enemy.position.y, enemy.position.z] as [number, number, number],
+          playerPosition: playerPosition,
+          terrainHeightData: terrainHeightData || localTerrainHeightData,
+          onTakeDamage: (damage: number) => {
+            // Handle enemy taking damage
+            setEnemies(prev => prev.map(e => {
+              if (e.id === enemy.id) {
+                console.log(`Enemy ${enemy.id} took ${damage} damage`)
+                // For now, just mark as dead if any damage is taken
+                // Later this could be more sophisticated with health tracking
+                return { ...e, isAlive: false }
+              }
+              return e
+            }))
+          }
+        }
+        
+        switch (enemy.type) {
+          case 'goblin':
+            return <ForestGoblin {...enemyProps} />
+          case 'crawler':
+            return <SwampCrawler {...enemyProps} />
+          case 'bandit':
+            return <ShadowBandit {...enemyProps} />
+          case 'golem':
+            return <RockGolem {...enemyProps} />
+          default:
+            return null
+        }
+      })}
+      </Physics>
     </>
   )
 }
