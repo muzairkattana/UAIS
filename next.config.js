@@ -1,26 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Optimize package imports for better tree shaking
-  experimental: {
-    optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei'],
-  },
+  // Ultra-minimal config - zero custom webpack rules
+  // Let Next.js handle everything with defaults
   
-  // Simple webpack config without babel-loader
-  webpack: (config, { isServer }) => {
-    // Only add fallbacks for client-side builds
-    if (!isServer) {
-      config.resolve.fallback = {
-        fs: false,
-        path: false,
-      }
-    }
-    return config
-  },
-  
-  // Use SWC for faster builds (default in Next.js 13+)
+  // Use SWC (default compiler)
   swcMinify: true,
   
-  // Optimize images
+  // Basic image config
   images: {
     unoptimized: true
   },

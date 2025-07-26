@@ -13,9 +13,11 @@ const MAX_STACK_SIZE = 100
 interface CampfireInventoryProps {
   campfireId: string
   onClose: () => void
+  onIgnite: (campfireId: string) => void
+  isActive: boolean
 }
 
-export default function CampfireInventory({ campfireId, onClose }: CampfireInventoryProps) {
+export default function CampfireInventory({ campfireId, onClose, onIgnite, isActive }: CampfireInventoryProps) {
   const { inventoryItems, setInventoryItems } = useInventory()
   const {
     getCampfire,

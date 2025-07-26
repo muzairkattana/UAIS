@@ -1,10 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Minimal config - let Next.js handle everything automatically
+  // Ultra-minimal config - zero custom webpack rules
+  // Let Next.js handle everything with defaults
+  
+  // Use SWC (default compiler)
   swcMinify: true,
+  
+  // Basic image config
   images: {
     unoptimized: true
-  }
+  },
+  
+  // Disable source maps for faster builds
+  productionBrowserSourceMaps: false,
 }
 
 module.exports = nextConfig
