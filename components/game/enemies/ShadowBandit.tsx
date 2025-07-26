@@ -1,5 +1,5 @@
 import React, { useRef, useMemo } from 'react';
-import { Mesh } from 'three';
+import { Group } from 'three';
 import BaseEnemy from './BaseEnemy';
 
 interface ShadowBanditProps {
@@ -8,17 +8,17 @@ interface ShadowBanditProps {
 }
 
 const ShadowBandit: React.FC<ShadowBanditProps> = ({ position, onDeath }) => {
-  const meshRef = useRef<Mesh>(null);
+  const meshRef = useRef<Group>(null);
 
   // Shadow Bandit stats - high speed, moderate health, high damage
   const stats = useMemo(() => ({
     maxHealth: 70,
     damage: 35,
     speed: 3.5,
-    detectionRange: 15,
-    attackRange: 2.0,
+    detectionRadius: 15,
+    attackRadius: 2.0,
     attackCooldown: 1500,
-    returnDistance: 25
+    maxChaseDistance: 25
   }), []);
 
   return (
@@ -26,7 +26,6 @@ const ShadowBandit: React.FC<ShadowBanditProps> = ({ position, onDeath }) => {
       position={position}
       stats={stats}
       onDeath={onDeath}
-      name="Shadow Bandit"
     >
       <group ref={meshRef}>
         {/* Main body - lean and agile */}

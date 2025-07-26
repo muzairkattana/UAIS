@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { useBox } from '@react-three/cannon';
 import * as THREE from 'three';
 
-const TentHouse = ({ position = [20, 0, 5] }) => {
+const TentHouse = ({ position = [20, 0, 5] as [number, number, number] }) => {
   const [tentFlap, setTentFlap] = useState(false);
   const [lanternOn, setLanternOn] = useState(true);
   const [chestOpen, setChestOpen] = useState(false);

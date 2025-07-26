@@ -79,10 +79,14 @@ export default function AdvancedHouseInteraction({
     if (!interactionRef.current || disabled) return
 
     const playerPosition = camera.position.clone()
-    let closest: { id: string; distance: number; interactable: any } | null = null
+    let closest: {
+      id: string;
+      distance: number;
+      interactable: typeof interactables[0];
+    } | null = null
 
     // Find the closest interactable within range
-    interactables.forEach((interactable) => {
+    for (const interactable of interactables) {
       const distance = playerPosition.distanceTo(interactable.position)
       
       if (distance <= interactable.range) {
@@ -94,10 +98,10 @@ export default function AdvancedHouseInteraction({
           }
         }
       }
-    })
+    }
 
     // Update nearest interactable
-    const newNearest = closest ? closest.id : null
+    const newNearest = closest?.id ?? null
     
     if (newNearest !== nearestInteractable) {
       setNearestInteractable(newNearest)

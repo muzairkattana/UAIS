@@ -1,5 +1,5 @@
 import React, { useRef, useMemo } from 'react';
-import { Mesh } from 'three';
+import { Group } from 'three';
 import BaseEnemy from './BaseEnemy';
 
 interface SwampCrawlerProps {
@@ -8,17 +8,17 @@ interface SwampCrawlerProps {
 }
 
 const SwampCrawler: React.FC<SwampCrawlerProps> = ({ position, onDeath }) => {
-  const meshRef = useRef<Mesh>(null);
+  const meshRef = useRef<Group>(null);
 
   // Swamp Crawler stats
   const stats = useMemo(() => ({
     maxHealth: 80,
     damage: 25,
     speed: 1.8,
-    detectionRange: 12,
-    attackRange: 2.5,
+    detectionRadius: 12,
+    attackRadius: 2.5,
     attackCooldown: 2000,
-    returnDistance: 20
+    maxChaseDistance: 20
   }), []);
 
   return (
@@ -26,7 +26,6 @@ const SwampCrawler: React.FC<SwampCrawlerProps> = ({ position, onDeath }) => {
       position={position}
       stats={stats}
       onDeath={onDeath}
-      name="Swamp Crawler"
     >
       <group ref={meshRef}>
         {/* Main body - slimy, elongated form */}

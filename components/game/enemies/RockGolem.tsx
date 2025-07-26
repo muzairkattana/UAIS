@@ -1,5 +1,5 @@
 import React, { useRef, useMemo } from 'react';
-import { Mesh } from 'three';
+import { Group } from 'three';
 import BaseEnemy from './BaseEnemy';
 
 interface RockGolemProps {
@@ -8,17 +8,17 @@ interface RockGolemProps {
 }
 
 const RockGolem: React.FC<RockGolemProps> = ({ position, onDeath }) => {
-  const meshRef = useRef<Mesh>(null);
+  const meshRef = useRef<Group>(null);
 
   // Rock Golem stats - very high health, very high damage, but slow
   const stats = useMemo(() => ({
     maxHealth: 150,
     damage: 50,
     speed: 1.5,
-    detectionRange: 12,
-    attackRange: 3.0,
+    detectionRadius: 12,
+    attackRadius: 3.0,
     attackCooldown: 3000,
-    returnDistance: 20
+    maxChaseDistance: 20
   }), []);
 
   return (
@@ -26,7 +26,6 @@ const RockGolem: React.FC<RockGolemProps> = ({ position, onDeath }) => {
       position={position}
       stats={stats}
       onDeath={onDeath}
-      name="Rock Golem"
     >
       <group ref={meshRef}>
         {/* Main body - large and rocky */}

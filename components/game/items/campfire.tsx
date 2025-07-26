@@ -57,7 +57,7 @@ export default function Campfire({
   }, [normal])
 
   // Animate the fire and embers
-  useFrame((state) => {
+  useFrame((state, delta) => {
     // Make sure the fire and ember refs exist
     if (!fireRef.current || !emberGroupRef.current) return
 
@@ -109,16 +109,16 @@ export default function Campfire({
       emberGroupRef.current.children.forEach((ember, i) => {
         if (ember instanceof THREE.Mesh) {
           // Update ember position
-          ember.position.y += embers[i].speed * state.delta
-          ember.position.x += embers[i].horizontalSpeed * Math.sin(state.clock.elapsedTime * 2) * state.delta
-          ember.position.z += embers[i].horizontalSpeed * Math.cos(state.clock.elapsedTime * 2) * state.delta
+          ember.position.y += embers[i].speed * delta
+          ember.position.x += embers[i].horizontalSpeed * Math.sin(state.clock.elapsedTime * 2) * delta
+          ember.position.z += embers[i].horizontalSpeed * Math.cos(state.clock.elapsedTime * 2) * delta
 
           // Rotate ember
           ember.rotation.x += embers[i].rotationSpeed
           ember.rotation.z += embers[i].rotationSpeed * 0.7
 
           // Update lifetime and handle respawn
-          embers[i].lifetime -= state.delta
+          embers[i].lifetime -= delta
 
           if (embers[i].lifetime <= 0) {
             // Reset ember

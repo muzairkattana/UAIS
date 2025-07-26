@@ -18,7 +18,7 @@ interface InventoryGridProps {
 }
 
 export default function InventoryGrid({ visible }: InventoryGridProps) {
-  const { inventoryItems, setInventoryItems, isOpen, activeCampfire } = useInventory()
+  const { inventoryItems, setInventoryItems, isOpen, activeCampfire, activeStorageBox } = useInventory()
   const { items: toolbarItems, setItems: setToolbarItems } = useToolbar()
   const { removeItemFromCraftingSlot } = useCrafting() // Declare useCrafting hook
   const { removeFuelFromSlot, getCampfire } = useCampfire()
@@ -26,7 +26,7 @@ export default function InventoryGrid({ visible }: InventoryGridProps) {
   const inventoryRef = useRef<HTMLDivElement>(null)
   const dragInProgressRef = useRef(false)
   const [draggedItem, setDraggedItem] = useState<{ index: number; item: InventoryItem } | null>(null)
-  const { activeStorageBox, addItemToSlot, removeItemFromSlot } = useStorageBox()
+  const { addItemToSlot, removeItemFromSlot } = useStorageBox()
 
   // Prevent pointer lock when inventory is open
   useEffect(() => {
@@ -422,7 +422,7 @@ export default function InventoryGrid({ visible }: InventoryGridProps) {
 
       addNotification({
         message: `Equipped ${item.name} to slot ${emptySlotIndex + 1}`,
-        type: "success",
+        type: "info",
       })
     } else {
       // No empty slot in toolbar

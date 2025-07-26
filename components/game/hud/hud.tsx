@@ -58,7 +58,7 @@ export default function HUD({
       {isLocked && !isInventoryOpen && <StatusBars />}
 
       {/* Interaction prompt - show when near interactable items */}
-      {isLocked && !isInventoryOpen && showPrompt && <InteractionPrompt show={showPrompt} message={promptMessage} />}
+      {isLocked && !isInventoryOpen && showPrompt && <InteractionPrompt />}
 
       {/* Toolbar - always show, regardless of inventory state */}
       <Toolbar />
@@ -83,7 +83,14 @@ export default function HUD({
       )}
 
       {/* Campfire inventory - show when active campfire is set */}
-      {activeCampfire && <CampfireInventory campfireId={activeCampfire} onClose={() => {}} />}
+      {activeCampfire && (
+        <CampfireInventory
+          campfireId={activeCampfire}
+          onClose={() => {}}
+          onIgnite={(campfireId) => console.log(`Igniting campfire ${campfireId}`)}
+          isActive={false}
+        />
+      )}
     </div>
   )
 }

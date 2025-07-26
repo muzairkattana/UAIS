@@ -293,7 +293,7 @@ export default function BaseEnemy({
   }, [takeDamage])
 
   return (
-    <group ref={ref}>
+    <group ref={ref as any}>
       {children}
       <HealthBar />
       <StateDisplay />

@@ -296,11 +296,14 @@ export default function Toolbar({ slots = 8 }: ToolbarProps) {
                   />
 
                   {/* Quantity indicator */}
-                  {item.quantity && item.quantity > 1 && (
-                    <div className="absolute bottom-0 right-0 bg-blue-600/80 text-white text-xs px-1 rounded-sm font-bold min-w-[16px] text-center">
-                      {item.quantity}
-                    </div>
-                  )}
+                  {(() => {
+                    const inventoryItem = item as InventoryItem
+                    return inventoryItem?.quantity && inventoryItem.quantity > 1 ? (
+                      <div className="absolute bottom-0 right-0 bg-blue-600/80 text-white text-xs px-1 rounded-sm font-bold min-w-[16px] text-center">
+                        {inventoryItem.quantity}
+                      </div>
+                    ) : null
+                  })()}
                 </div>
               )}
             </div>

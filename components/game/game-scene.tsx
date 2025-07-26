@@ -427,8 +427,7 @@ export default function GameScene({
             minFlatness: 1.2,
             minWaterDistance: 15,
             waterLevel: terrainParams.waterLevel * terrainParams.height + terrainParams.heightOffset,
-            preferredDistance: 10, // Smaller preferred distance since we have a target location
-            searchRadius: 20 // Allow wider search radius to find suitable spots
+            preferredDistance: 10 // Smaller preferred distance since we have a target location
           }
         )
         
@@ -702,7 +701,7 @@ export default function GameScene({
   const [placedDoors, setPlacedDoors] = useState<Array<{
     id: string
     position: [number, number, number]
-    rotation: [number, number, number]
+    rotation?: number
     normal?: [number, number, number]
     isOpen?: boolean
   }>>([])
@@ -905,8 +904,8 @@ return (
           key={door.id}
           id={door.id}
           position={door.position}
-          rotation={door.rotation || [0, 0, 0]}
-          isOpen={door.isOpen || false}
+          rotation={door.properties?.rotation || [0, 0, 0]}
+          isOpen={door.properties?.isOpen || false}
         />
       ))}
 

@@ -21,7 +21,7 @@ export default function CraftingGrid({ visible }: CraftingGridProps) {
     getIngredientStatus,
   } = useCrafting()
 
-  const { inventoryOpenedBy, saveCameraState, restoreCameraState } = useInventory()
+  const { inventoryOpenedBy } = useInventory()
 
   const craftingRef = useRef<HTMLDivElement>(null)
 
