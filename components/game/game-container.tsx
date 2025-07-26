@@ -730,11 +730,10 @@ function GameContainerInner() {
             </div>
           )}
 
-          {activeStorageBox &&
-            isInventoryOpen &&
-            (console.log("Rendering StorageBoxInventory with ID:", activeStorageBox) || (
-              <StorageBoxInventory storageBoxId={activeStorageBox} onClose={handleCloseStorageBoxInventory} />
-            ))}
+          {activeStorageBox && isInventoryOpen && (() => {
+            console.log("Rendering StorageBoxInventory with ID:", activeStorageBox);
+            return <StorageBoxInventory storageBoxId={activeStorageBox} onClose={handleCloseStorageBoxInventory} />;
+          })()}
 
           {showDebug && <DebugPanel isLocked={isLocked} onCommand={handleCommand} />}
           <FPSCounter visible={settings.gameplay.showFps} />
