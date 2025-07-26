@@ -107,7 +107,7 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
           // FIXED: Create a wood item with exactly 20 quantity
           const woodItem = {
             id: `wood_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-            type: "resource",
+            type: "item" as const,
             name: "Wood",
             icon: "/wood.png", // Updated path
             quantity: 20, // Explicitly set to 20
