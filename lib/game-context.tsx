@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
 import type * as THREE from "three"
 import type { TreeInstance } from "@/types/tree-instance"
+import type { StoneInstance } from "@/types/stone-instance"
 
 export interface BulletTrail {
   start: THREE.Vector3
@@ -11,16 +12,7 @@ export interface BulletTrail {
   intensity?: number // Added intensity property
 }
 
-// TreeInstance is now imported from common types file
-
-export interface StoneInstance {
-  id: string
-  position: THREE.Vector3
-  type: number
-  health: number
-  maxHealth: number
-  visible: boolean
-}
+// TreeInstance and StoneInstance are now imported from common types files
 
 export interface PlacedItem {
   id: string
@@ -41,11 +33,11 @@ interface GameState {
   bulletTrails: BulletTrail[]
   addBulletTrail: (trail: BulletTrail) => void
   treeInstances: TreeInstance[]
-  setTreeInstances: (trees: TreeInstance[]) => void
+  setTreeInstances: (trees: TreeInstance[] | ((prev: TreeInstance[]) => TreeInstance[])) => void
   stoneInstances: StoneInstance[]
-  setStoneInstances: (stones: StoneInstance[]) => void
+  setStoneInstances: (stones: StoneInstance[] | ((prev: StoneInstance[]) => StoneInstance[])) => void
   placedItems: PlacedItem[]
-  setPlacedItems: (items: PlacedItem[]) => void
+  setPlacedItems: (items: PlacedItem[] | ((prev: PlacedItem[]) => PlacedItem[])) => void
   isPaused: boolean
   setIsPaused: (paused: boolean) => void
   togglePause: () => void

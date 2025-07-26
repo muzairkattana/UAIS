@@ -1,4 +1,5 @@
 import * as THREE from "three"
+import type { StoneInstance } from "@/types/stone-instance"
 
 // Stone parameters
 export interface StoneParams {
@@ -9,19 +10,7 @@ export interface StoneParams {
   avoidWaterDepth: number // How far from water to avoid placing stones
 }
 
-// Stone instance data
-export interface StoneNodeInstance {
-  id: number // Unique identifier for the stone
-  position: THREE.Vector3
-  rotation: THREE.Euler
-  scale: number
-  radius: number
-  type: number // Different stone types (0-2)
-  health: number // Current health of the stone
-  maxHealth: number // Maximum health of the stone
-  isMined: boolean // Whether the stone has been mined
-  respawnTime: number | null // When the stone will respawn (timestamp)
-}
+// StoneInstance is now imported from common types file
 
 export class StoneGenerator {
   private params: StoneParams
@@ -136,9 +125,9 @@ export class StoneGenerator {
   }
 
   // Generate stone instances
-  generateStones(): StoneNodeInstance[] {
+  generateStones(): StoneInstance[] {
     console.log("Generating stones...")
-    const stones: StoneNodeInstance[] = []
+    const stones: StoneInstance[] = []
     const halfWidth = this.terrainSize.width / 2
     const halfDepth = this.terrainSize.depth / 2
 

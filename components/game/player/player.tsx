@@ -7,7 +7,7 @@ import * as THREE from "three"
 import type { TreeInstance } from "@/types/tree-instance"
 import { useSoundManager } from "@/lib/sound-manager"
 import { useInventory } from "@/lib/inventory-context"
-import type { StoneNodeInstance } from "@/lib/stone-generator"
+import type { StoneInstance } from "@/types/stone-instance"
 import type { Wall } from "@/lib/wall-generator" // Declare the Wall variable
 
 // Define a type for storage boxes
@@ -33,7 +33,7 @@ interface PlayerProps {
   terrainHeightData: number[][]
   spawnPoint: THREE.Vector3
   trees?: TreeInstance[]
-  stones?: StoneNodeInstance[]
+  stones?: StoneInstance[]
   storageBoxes?: StorageBoxInstance[] // Add storage boxes
   mouseSensitivity?: number
   invertY?: boolean

@@ -3,7 +3,8 @@
 import { useRef, useMemo, useEffect, useState } from "react"
 import * as THREE from "three"
 import { useFrame, useThree } from "@react-three/fiber"
-import { StoneGenerator, type StoneNodeInstance } from "@/lib/stone-generator"
+import { StoneGenerator } from "@/lib/stone-generator"
+import type { StoneInstance } from "@/types/stone-instance"
 import { useGameState } from "@/lib/game-context"
 import { useSoundManager } from "@/lib/sound-manager"
 import { useInventory } from "@/lib/inventory-context"
@@ -14,7 +15,7 @@ interface StoneNodesProps {
   terrainSize: { width: number; depth: number }
   waterLevel: number
   maxRenderDistance?: number
-  onStoneInstancesUpdate?: (stones: StoneNodeInstance[]) => void
+  onStoneInstancesUpdate?: (stones: StoneInstance[]) => void
 }
 
 export default function StoneNodes({
@@ -36,7 +37,7 @@ export default function StoneNodes({
   const stoneRef3 = useRef<THREE.InstancedMesh>(null)
 
   // State for stone instances
-  const [stoneInstances, setStoneInstances] = useState<StoneNodeInstance[]>([])
+  const [stoneInstances, setStoneInstances] = useState<StoneInstance[]>([])
 
   // Generate stones only once
   useEffect(() => {
