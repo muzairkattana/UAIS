@@ -504,7 +504,7 @@ export default function Clouds({
                 scale={[0.1, cloud.scale.y * 1.5, 0.1]}
               >
                 <cylinderGeometry args={[0.02, 0.05, 1, 8]} />
-                <meshBasicMaterial
+                <meshStandardMaterial
                   color="#FFFFFF"
                   transparent
                   opacity={0.8}
