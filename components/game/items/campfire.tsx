@@ -53,7 +53,7 @@ export default function Campfire({
     const euler = new THREE.Euler()
     euler.setFromQuaternion(quaternion)
 
-    return [euler.x, euler.y, euler.z]
+    return euler
   }, [normal])
 
   // Animate the fire and embers

@@ -13,6 +13,7 @@ import { StorageBoxProvider } from "@/lib/storage-box-context"
 import { CraftingProvider } from "@/lib/crafting-context"
 import { ItemManagerProvider } from "@/lib/item-manager-context"
 import { InteractionProvider } from "@/lib/interaction-context"
+import { ArmyCampProvider } from "@/lib/army-camp-context"
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -27,7 +28,9 @@ export function Providers({ children }: { children: ReactNode }) {
                     <StorageBoxProvider>
                       <CraftingProvider>
                         <ItemManagerProvider>
-                          <InteractionProvider>{children}</InteractionProvider>
+                          <InteractionProvider>
+                            <ArmyCampProvider>{children}</ArmyCampProvider>
+                          </InteractionProvider>
                         </ItemManagerProvider>
                       </CraftingProvider>
                     </StorageBoxProvider>

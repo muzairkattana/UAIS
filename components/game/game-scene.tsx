@@ -11,6 +11,7 @@ import * as THREE from "three"
 import Player from "./player/player"
 import Trees from "./environment/trees"
 import StoneNodes from "./environment/stone-nodes"
+import Sky from "./environment/sky"
 import { useGameState as useGameContext } from "@/lib/game-context"
 import { usePlayerStatus } from "@/lib/player-status-context"
 import { useSettings } from "@/lib/settings-context"
@@ -57,6 +58,11 @@ import ForestGoblin from "./enemies/ForestGoblin"
 import SwampCrawler from "./enemies/SwampCrawler"
 import ShadowBandit from "./enemies/ShadowBandit"
 import RockGolem from "./enemies/RockGolem"
+
+// Import army and camp components
+import Camp from "./structures/Camp"
+import Army from "./armies/Army"
+import { useArmyCamp } from "@/lib/army-camp-context"
 
 export const MAX_RENDER_DISTANCE = 150
 
@@ -153,6 +159,21 @@ export default function GameScene({
     KeyC: false, // Changed from ControlLeft to KeyC for crouching
   })
   const { health, hydration, hunger, updateStatus } = usePlayerStatus()
+  // Use try-catch to handle the provider error gracefully
+  let camps, armies, addCamp, addArmy
+  try {
+    const armyCampContext = useArmyCamp()
+    camps = armyCampContext.camps
+    armies = armyCampContext.armies
+    addCamp = armyCampContext.addCamp
+    addArmy = armyCampContext.addArmy
+  } catch (error) {
+    console.warn('ArmyCamp context not available:', error)
+    camps = new Map()
+    armies = new Map()
+    addCamp = () => 'fake-id'
+    addArmy = () => 'fake-id'
+  }
   const controls = useRef<any>()
   const terrainRef = useRef<THREE.Mesh>(null)
   const terrainGenerated = useRef(false)
@@ -209,7 +230,10 @@ export default function GameScene({
   useEffect(() => {
     if (controls.current) {
       const handleLockChange = () => {
-        setIsLocked(document.pointerLockElement === controls.current.domElement)
+        // Check if controls.current still exists before accessing domElement
+        if (controls.current && controls.current.domElement) {
+          setIsLocked(document.pointerLockElement === controls.current.domElement)
+        }
       }
 
       document.addEventListener("pointerlockchange", handleLockChange)
@@ -510,7 +534,115 @@ export default function GameScene({
       setEnemies(spawnedEnemies)
       console.log(`Spawned ${spawnedEnemies.length} enemies`)
     }
-  }, [localTerrainHeightData, terrainParams, setTerrainHeightData, setTerrainSize, houseLocation])
+
+    // Create sample camps and armies after terrain is ready
+    if (camps.size === 0 && terrainParams) {
+      console.log('Creating sample camps and armies...')
+      
+      // Create player camp
+      const playerCampPosition = new THREE.Vector3(
+        newSpawnPoint.x + 50,
+        terrainHeight + 1,
+        newSpawnPoint.z + 50
+      )
+      const playerCampId = addCamp({
+        position: playerCampPosition,
+        rotation: 0,
+        type: 'player',
+        size: 'medium',
+        maxOccupants: 20,
+        currentOccupants: 0,
+        armyIds: []
+      })
+      
+      // Create enemy camp
+      const enemyCampPosition = new THREE.Vector3(
+        newSpawnPoint.x - 80,
+        terrainHeight + 1,
+        newSpawnPoint.z - 80
+      )
+      const enemyCampId = addCamp({
+        position: enemyCampPosition,
+        rotation: Math.PI,
+        type: 'enemy',
+        size: 'large',
+        maxOccupants: 30,
+        currentOccupants: 0,
+        armyIds: []
+      })
+      
+      // Create neutral camp
+      const neutralCampPosition = new THREE.Vector3(
+        newSpawnPoint.x + 100,
+        terrainHeight + 1,
+        newSpawnPoint.z - 50
+      )
+      const neutralCampId = addCamp({
+        position: neutralCampPosition,
+        rotation: -Math.PI / 2,
+        type: 'neutral',
+        size: 'small',
+        maxOccupants: 15,
+        currentOccupants: 0,
+        armyIds: []
+      })
+      
+      // Create armies for each camp
+      // Player army - infantry
+      addArmy({
+        position: new THREE.Vector3(
+          playerCampPosition.x + 10,
+          playerCampPosition.y,
+          playerCampPosition.z + 10
+        ),
+        type: 'infantry',
+        size: 8,
+        campId: playerCampId,
+        isActive: false
+      })
+      
+      // Enemy army - archers
+      addArmy({
+        position: new THREE.Vector3(
+          enemyCampPosition.x - 15,
+          enemyCampPosition.y,
+          enemyCampPosition.z - 15
+        ),
+        type: 'archer',
+        size: 12,
+        campId: enemyCampId,
+        isActive: false
+      })
+      
+      // Enemy army - cavalry
+      addArmy({
+        position: new THREE.Vector3(
+          enemyCampPosition.x + 15,
+          enemyCampPosition.y,
+          enemyCampPosition.z + 15
+        ),
+        type: 'cavalry',
+        size: 6,
+        campId: enemyCampId,
+        isActive: false
+      })
+      
+      // Neutral army - siege
+      addArmy({
+        position: new THREE.Vector3(
+          neutralCampPosition.x,
+          neutralCampPosition.y,
+          neutralCampPosition.z + 20
+        ),
+        type: 'siege',
+        size: 4,
+        campId: neutralCampId,
+        isActive: false
+      })
+      
+      console.log('Sample camps and armies created!')
+    }
+  }, [localTerrainHeightData, terrainParams, setTerrainHeightData, setTerrainSize, houseLocation, camps, addCamp, addArmy])
 
   // Create walls for collision (boundary walls)
   const boundaryWalls = useMemo(() => {
@@ -755,7 +887,7 @@ export default function GameScene({
     console.log(`Village house ${houseId} cabinet ${villageHouseStates[houseId]?.cabinetOpen ? 'closed' : 'opened'}`)
   }
 
-return (
+  return (
     <>
       <PointerLockControls ref={controls} />
 
@@ -766,8 +898,13 @@ return (
 
       <Physics>
 
-      {/* Sky color */}
-      <color attach="background" args={[skyColor]} />
+      {/* Professional Sky System with Sun and Clouds */}
+      <Sky 
+        sunPosition={[100, 120, 50]}
+        cloudCount={8}
+        cloudDensity={0.7}
+        timeOfDay="day"
+      />
 
       {/* Enhanced fog with smooth blending - only if fog density > 0 */}
       {fogDensity > 0 && <fog attach="fog" args={[fogColor, fogParams.near, fogParams.far]} />}
@@ -835,6 +972,12 @@ return (
           storageBoxes={effectiveItemManager.items.storage_box.map((item) => ({
             id: item.id,
             position: item.position,
+          }))}
+          houses={villageHouses.map((house) => ({
+            id: house.id,
+            position: [house.position.x, house.position.y, house.position.z],
+            rotation: [0, house.rotation, 0],
+            scale: 1
           }))}
           mouseSensitivity={settings.controls?.mouseSensitivity || 1.0}
           invertY={settings.controls?.invertY || false}
@@ -1009,6 +1152,32 @@ return (
             return null
         }
       })}
+      
+      {/* Render Camps */}
+      {Array.from(camps.values()).map((camp) => (
+        <Camp
+          key={camp.id}
+          id={camp.id}
+          position={[camp.position.x, camp.position.y, camp.position.z]}
+          rotation={[0, camp.rotation, 0]}
+          type={camp.type}
+          size={camp.size}
+          maxOccupants={camp.maxOccupants}
+          currentOccupants={camp.currentOccupants}
+        />
+      ))}
+      
+      {/* Render Armies */}
+      {Array.from(armies.values()).map((army) => (
+        <Army
+          key={army.id}
+          id={army.id}
+          position={[army.position.x, army.position.y, army.position.z]}
+          type={army.type}
+          size={army.size}
+          campId={army.campId}
+        />
+      ))}
       </Physics>
     </>
   )

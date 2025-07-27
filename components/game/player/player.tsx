@@ -35,6 +35,12 @@ interface PlayerProps {
   trees?: TreeInstance[]
   stones?: StoneInstance[]
   storageBoxes?: StorageBoxInstance[] // Add storage boxes
+  houses?: Array<{
+    id: string
+    position: [number, number, number]
+    rotation?: [number, number, number]
+    scale?: number
+  }>
   mouseSensitivity?: number
   invertY?: boolean
   disabled?: boolean
@@ -68,6 +74,7 @@ export default function Player({
   trees = [],
   stones = [],
   storageBoxes = [], // Add storage boxes with default empty array
+  houses = [], // Add houses with default empty array
   mouseSensitivity = 1.0,
   invertY = false,
   disabled = false,
@@ -333,6 +340,47 @@ export default function Player({
     }
 
     return { collision: collisionDetected, standingOn, height: stoneHeight }
+  }
+
+  // Check collision with houses - prevent player from walking through house walls
+  const checkHouseCollision = (position: THREE.Vector3): boolean => {
+    if (!houses || houses.length === 0) {
+      return false
+    }
+
+    const playerSphere = new THREE.Sphere(position, PLAYER_RADIUS)
+
+    for (const house of houses) {
+      const housePos = new THREE.Vector3(...house.position)
+      const scale = house.scale || 1
+      
+      // House dimensions based on the house component structure
+      // Main house structure is 8x6 units (width x depth)
+      const houseWidth = 8.2 * scale // Slightly larger for collision
+      const houseDepth = 6.2 * scale
+      const houseHeight = 3 * scale
+      
+      // Create collision box for the house
+      const houseBox = new THREE.Box3(
+        new THREE.Vector3(
+          housePos.x - houseWidth / 2,
+          housePos.y,
+          housePos.z - houseDepth / 2
+        ),
+        new THREE.Vector3(
+          housePos.x + houseWidth / 2,
+          housePos.y + houseHeight,
+          housePos.z + houseDepth / 2
+        )
+      )
+      
+      // Check if player sphere intersects with house box
+      if (houseBox.intersectsSphere(playerSphere)) {
+        return true
+      }
+    }
+
+    return false
   }
 
   // Check collision with trees - IMPROVED to ensure trunk collision works properly
@@ -610,7 +658,7 @@ export default function Player({
     // Calculate new position with horizontal movement
     const newHorizontalPosition = playerPosition.current.clone().add(horizontalMovement)
 
-    // Check for horizontal collisions with walls, trees, stones, and storage boxes
+    // Check for horizontal collisions with walls, trees, stones, storage boxes, and houses
     const wallCollision = checkWallCollision(
       new THREE.Vector3(newHorizontalPosition.x, playerPosition.current.y, newHorizontalPosition.z),
     )
@@ -627,7 +675,11 @@ export default function Player({
       new THREE.Vector3(newHorizontalPosition.x, playerPosition.current.y, newHorizontalPosition.z),
     )
 
-    if (!wallCollision && !treeCollision.collision && !stoneCollision.collision && !boxCollision.collision) {
+    const houseCollision = checkHouseCollision(
+      new THREE.Vector3(newHorizontalPosition.x, playerPosition.current.y, newHorizontalPosition.z),
+    )
+
+    if (!wallCollision && !treeCollision.collision && !stoneCollision.collision && !boxCollision.collision && !houseCollision) {
       // Update horizontal position if no collision
       playerPosition.current.x = newHorizontalPosition.x
       playerPosition.current.z = newHorizontalPosition.z
@@ -644,8 +696,9 @@ export default function Player({
       const xTreeCollision = checkTreeCollision(newXPosition)
       const xStoneCollision = checkStoneCollision(newXPosition)
       const xBoxCollision = checkStorageBoxCollision(newXPosition)
+      const xHouseCollision = checkHouseCollision(newXPosition)
 
-      if (!xWallCollision && !xTreeCollision.collision && !xStoneCollision.collision && !xBoxCollision.collision) {
+      if (!xWallCollision && !xTreeCollision.collision && !xStoneCollision.collision && !xBoxCollision.collision && !xHouseCollision) {
         playerPosition.current.x = newHorizontalPosition.x
       }
 
@@ -660,8 +713,9 @@ export default function Player({
       const zTreeCollision = checkTreeCollision(newZPosition)
       const zStoneCollision = checkStoneCollision(newZPosition)
       const zBoxCollision = checkStorageBoxCollision(newZPosition)
+      const zHouseCollision = checkHouseCollision(newZPosition)
 
-      if (!zWallCollision && !zTreeCollision.collision && !zStoneCollision.collision && !zBoxCollision.collision) {
+      if (!zWallCollision && !zTreeCollision.collision && !zStoneCollision.collision && !zBoxCollision.collision && !zHouseCollision) {
         playerPosition.current.z = newHorizontalPosition.z
       }
     }

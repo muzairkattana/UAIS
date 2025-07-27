@@ -59,6 +59,7 @@ function GameContainerInner() {
   const [pointerLockSupported, setPointerLockSupported] = useState(true)
   const [pointerLockError, setPointerLockError] = useState<any>(null)
   const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [showCampfirePrompt, setShowCampfirePrompt] = useState(false)
   const [activeCampfire, setActiveCampfire] = useState<string | null>(null)
   const [placedCampfires, setPlacedCampfires] = useState<
@@ -168,6 +169,32 @@ function GameContainerInner() {
     }
   }, [])
 
+  // Monitor fullscreen state changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement)
+      
+      setIsFullscreen(isCurrentlyFullscreen)
+      console.log("Fullscreen state changed:", isCurrentlyFullscreen ? "enabled" : "disabled")
+    }
+
+    // Add fullscreen change event listeners
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange)
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange)
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange)
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange)
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange)
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange)
+      document.removeEventListener("MSFullscreenChange", handleFullscreenChange)
+    }
+  }, [])
+
   // Initialize sound manager
   useEffect(() => {
     soundManager?.setVolume(settings.audio.masterVolume, settings.audio.sfxVolume)
@@ -263,6 +290,66 @@ function GameContainerInner() {
       } catch (error) {
         console.error("Error exiting pointer lock:", error)
       }
+    }
+  }
+
+  // Function to request fullscreen
+  const requestFullscreen = () => {
+    console.log("Requesting fullscreen mode")
+    
+    // Get the document element to make fullscreen
+    const element = document.documentElement
+    
+    try {
+      if (element.requestFullscreen) {
+        // Modern browsers
+        const fullscreenPromise = element.requestFullscreen()
+        if (fullscreenPromise && typeof fullscreenPromise.then === "function") {
+          fullscreenPromise
+            .then(() => {
+              console.log("Fullscreen successfully activated")
+              setIsFullscreen(true)
+            })
+            .catch((error) => {
+              console.warn("Error requesting fullscreen:", error)
+            })
+        }
+      } else if ((element as any).webkitRequestFullscreen) {
+        // Safari/Webkit
+        ;(element as any).webkitRequestFullscreen()
+      } else if ((element as any).mozRequestFullScreen) {
+        // Firefox
+        ;(element as any).mozRequestFullScreen()
+      } else if ((element as any).msRequestFullscreen) {
+        // IE/Edge
+        ;(element as any).msRequestFullscreen()
+      } else {
+        console.warn("Fullscreen API not supported in this browser")
+      }
+    } catch (error) {
+      console.error("Exception requesting fullscreen:", error)
+    }
+  }
+
+  // Function to exit fullscreen
+  const exitFullscreen = () => {
+    console.log("Exiting fullscreen mode")
+    
+    try {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      } else if ((document as any).webkitExitFullscreen) {
+        // Safari/Webkit
+        ;(document as any).webkitExitFullscreen()
+      } else if ((document as any).mozCancelFullScreen) {
+        // Firefox
+        ;(document as any).mozCancelFullScreen()
+      } else if ((document as any).msExitFullscreen) {
+        // IE/Edge
+        ;(document as any).msExitFullscreen()
+      }
+    } catch (error) {
+      console.error("Error exiting fullscreen:", error)
     }
   }
 
@@ -411,8 +498,8 @@ function GameContainerInner() {
   useEffect(() => {
     console.log("Game status changed to:", gameStatus)
 
-    // If we're transitioning to sleeping or playing and terrain is ready, setHasStarted
-    if ((gameStatus === "sleeping" || gameStatus === "playing") && terrainReady && !hasStarted) {
+    // Only set hasStarted to true when player explicitly transitions to playing state
+    if (gameStatus === "playing" && terrainReady && !hasStarted) {
       setHasStarted(true)
     }
 
@@ -423,12 +510,21 @@ function GameContainerInner() {
       // Record the time when entering the game
       gameEntryTime.current = Date.now()
 
+      // Automatically request fullscreen when transitioning to playing state
+      if (!isFullscreen) {
+        setTimeout(() => {
+          if (gameStatus === "playing") {
+            requestFullscreen()
+          }
+        }, 200) // Give a bit more time for state to settle
+      }
+
       // Automatically request pointer lock when transitioning to playing state
       setTimeout(() => {
         if (gameStatus === "playing" && !isInventoryOpen) {
           requestPointerLock()
         }
-      }, 100)
+      }, isFullscreen ? 100 : 400) // Delay pointer lock if we're also requesting fullscreen
     }
 
     // Make sure pointer lock is released when entering sleeping state

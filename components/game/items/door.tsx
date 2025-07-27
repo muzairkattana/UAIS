@@ -40,8 +40,10 @@ export default function Door({
     // Convert to Euler angles
     const euler = new THREE.Euler()
     euler.setFromQuaternion(quaternion)
-
-    return [euler.x, euler.y + rotation, euler.z]
+    
+    // Apply additional rotation and return Euler instance
+    euler.y += rotation
+    return euler
   }, [normal, rotation])
 
   // Animate door opening/closing
@@ -112,8 +114,8 @@ export default function Door({
         </mesh>
 
         {/* Door handle */}
-        <mesh position={[0.8, 0, 0.03]}>
-          <cylinderGeometry args={[0.02, 0.02, 0.15, 8]} rotation={[Math.PI / 2, 0, 0]} />
+        <mesh position={[0.8, 0, 0.03]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.02, 0.02, 0.15, 8]} />
           <meshStandardMaterial
             color={isGhost ? "#C0C0C0" : "#A9A9A9"}
             transparent={isGhost}

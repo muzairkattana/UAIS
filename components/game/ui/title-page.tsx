@@ -12,8 +12,8 @@ export default function TitlePage() {
       console.log("Resume button clicked, setting game status directly to playing")
       setGameStatus("playing")
     } else {
-      console.log("Play button clicked, setting game status to sleeping")
-      setGameStatus("sleeping")
+      console.log("Play button clicked, setting game status to playing")
+      setGameStatus("playing")
     }
   }
 

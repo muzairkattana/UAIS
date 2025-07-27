@@ -217,7 +217,7 @@ const TentHouse = ({ position = [20, 0, 5] as [number, number, number] }) => {
       />
 
       {/* Physics collision reference */}
-      <mesh ref={tentPhysics} visible={false}>
+      <mesh ref={tentPhysics as any} visible={false}>
         <boxGeometry args={[4, 3, 4]} />
       </mesh>
     </group>
