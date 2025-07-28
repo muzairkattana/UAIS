@@ -21,6 +21,28 @@ export interface PlacedItem {
   data?: any
 }
 
+export interface VillageHouse {
+  id: string
+  type: 'cabin' | 'hut' | 'stone' | 'tent'
+  position: THREE.Vector3
+  rotation: number
+}
+
+export interface Enemy {
+  id: string
+  type: 'goblin' | 'crawler' | 'bandit' | 'golem'
+  position: THREE.Vector3
+  isAlive: boolean
+}
+
+export interface PlacedDoor {
+  id: string
+  position: [number, number, number]
+  rotation?: number
+  normal?: [number, number, number]
+  isOpen?: boolean
+}
+
 interface GameState {
   playerPosition: { x: number; y: number; z: number }
   setPlayerPosition: (position: { x: number; y: number; z: number }) => void
@@ -38,6 +60,12 @@ interface GameState {
   setStoneInstances: (stones: StoneInstance[] | ((prev: StoneInstance[]) => StoneInstance[])) => void
   placedItems: PlacedItem[]
   setPlacedItems: (items: PlacedItem[] | ((prev: PlacedItem[]) => PlacedItem[])) => void
+  villageHouses: VillageHouse[]
+  setVillageHouses: (houses: VillageHouse[] | ((prev: VillageHouse[]) => VillageHouse[])) => void
+  enemies: Enemy[]
+  setEnemies: (enemies: Enemy[] | ((prev: Enemy[]) => Enemy[])) => void
+  placedDoors: PlacedDoor[]
+  setPlacedDoors: (doors: PlacedDoor[] | ((prev: PlacedDoor[]) => PlacedDoor[])) => void
   isPaused: boolean
   setIsPaused: (paused: boolean) => void
   togglePause: () => void
@@ -54,6 +82,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [treeInstances, setTreeInstances] = useState<TreeInstance[]>([])
   const [stoneInstances, setStoneInstances] = useState<StoneInstance[]>([])
   const [placedItems, setPlacedItems] = useState<PlacedItem[]>([])
+  const [villageHouses, setVillageHouses] = useState<VillageHouse[]>([])
+  const [enemies, setEnemies] = useState<Enemy[]>([])
+  const [placedDoors, setPlacedDoors] = useState<PlacedDoor[]>([])
   const [isPaused, setIsPaused] = useState(false)
 
   // Use useCallback to prevent unnecessary re-renders
@@ -91,6 +122,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setStoneInstances,
         placedItems,
         setPlacedItems,
+        villageHouses,
+        setVillageHouses,
+        enemies,
+        setEnemies,
+        placedDoors,
+        setPlacedDoors,
         isPaused,
         setIsPaused,
         togglePause,

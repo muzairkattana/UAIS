@@ -56,7 +56,7 @@ export default function StorageBoxPlacer({
     // Show notification
     addNotification({
       message: "Storage Box placed",
-      type: "success",
+      type: "info",
       icon: "/storage-box-icon.png",
     })
 

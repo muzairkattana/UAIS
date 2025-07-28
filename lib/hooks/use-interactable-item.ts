@@ -11,6 +11,7 @@ interface UseInteractableItemProps {
   interactionRange?: number
   lookAtThreshold?: number
   onInteract?: (itemId: string) => void
+  onInteractionStateChange?: (state: { showPrompt: boolean; isInRange: boolean }) => void
   disabled?: boolean
   itemType?: string
 }
@@ -21,6 +22,7 @@ export function useInteractableItem({
   interactionRange = 2.5,
   lookAtThreshold = 0.9,
   onInteract,
+  onInteractionStateChange,
   disabled = false,
   itemType = "item",
 }: UseInteractableItemProps) {
@@ -51,6 +53,10 @@ export function useInteractableItem({
     // Only update if changed
     if (inRange !== isInRange) {
       setIsInRange(inRange)
+      // Call onInteractionStateChange if provided
+      if (onInteractionStateChange) {
+        onInteractionStateChange({ showPrompt: inRange && isLookingAt, isInRange: inRange })
+      }
     }
 
     // If not in range, not looking at
@@ -80,6 +86,10 @@ export function useInteractableItem({
     // Only update if changed
     if (lookingAt !== isLookingAt) {
       setIsLookingAt(lookingAt)
+      // Call onInteractionStateChange if provided
+      if (onInteractionStateChange) {
+        onInteractionStateChange({ showPrompt: inRange && lookingAt, isInRange })
+      }
     }
 
     // Update interactable state

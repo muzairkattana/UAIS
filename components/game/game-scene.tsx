@@ -130,7 +130,19 @@ export default function GameScene({
   setPlacedStorageBoxes,
 }: GameSceneProps) {
   const { scene, camera } = useThree()
-  const { bulletTrails, setTerrainHeightData, setTerrainSize, terrainHeightData, terrainSize } = useGameContext()
+  const { 
+    bulletTrails, 
+    setTerrainHeightData, 
+    setTerrainSize, 
+    terrainHeightData, 
+    terrainSize,
+    villageHouses,
+    setVillageHouses,
+    enemies,
+    setEnemies,
+    placedDoors,
+    setPlacedDoors
+  } = useGameContext()
   const { gameStatus } = useGameState()
   const { settings } = useSettings()
   const { selectedSlot, items } = useToolbar()
@@ -142,12 +154,7 @@ export default function GameScene({
   const [walls, setWalls] = useState<any[]>([])
   const [terrainReady, setTerrainReady] = useState(false)
   const [houseLocation, setHouseLocation] = useState<{ position: THREE.Vector3; rotation: number } | null>(null)
-  const [villageHouses, setVillageHouses] = useState<Array<{
-    id: string
-    type: 'cabin' | 'hut' | 'stone' | 'tent'
-    position: THREE.Vector3
-    rotation: number
-  }>>([])
+  // Village houses are now managed in global context
   const [isDoorOpen, setIsDoorOpen] = useState(false)
   const [keys, setKeys] = useState({
     KeyW: false,
@@ -820,23 +827,8 @@ export default function GameScene({
     }
   }>({})
 
-  // Enemy spawning state
-  const [enemies, setEnemies] = useState<Array<{
-    id: string
-    type: 'goblin' | 'crawler' | 'bandit' | 'golem'
-    position: THREE.Vector3
-    isAlive: boolean
-  }>>([])
+  // Enemies and doors are now managed in global context
   const [playerPosition, setPlayerPosition] = useState<THREE.Vector3>(new THREE.Vector3())
-  
-  // Placed doors state
-  const [placedDoors, setPlacedDoors] = useState<Array<{
-    id: string
-    position: [number, number, number]
-    rotation?: number
-    normal?: [number, number, number]
-    isOpen?: boolean
-  }>>([])
 
   const handleFireplaceToggle = () => {
     setFireplaceActive(!fireplaceActive)

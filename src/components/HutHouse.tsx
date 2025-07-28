@@ -173,7 +173,7 @@ export const HutHouse: React.FC<HutHouseProps> = ({ position }) => {
         [1.5, 0.3, 1.5],
         [-1.8, 0.3, 1]
       ].map((basketPos, i) => (
-        <group key={i} position={basketPos}>
+        <group key={i} position={basketPos as [number, number, number]}>
           <mesh>
             <cylinderGeometry args={[0.4, 0.3, 0.6, 8]} />
             <meshStandardMaterial color="#D2691E" />

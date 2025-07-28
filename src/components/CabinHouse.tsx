@@ -199,7 +199,7 @@ export const CabinHouse: React.FC<CabinHouseProps> = ({ position }) => {
           </mesh>
           {/* Legs */}
           {[[-0.2, -0.3, -0.2], [0.2, -0.3, -0.2], [-0.2, -0.3, 0.2], [0.2, -0.3, 0.2]].map((legPos, j) => (
-            <mesh key={j} position={legPos}>
+            <mesh key={j} position={legPos as [number, number, number]}>
               <boxGeometry args={[0.05, 0.6, 0.05]} />
               <meshStandardMaterial color={darkLogColor} />
             </mesh>

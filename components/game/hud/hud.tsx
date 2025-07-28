@@ -8,7 +8,7 @@ import CraftingGrid from "./crafting-grid"
 import StatusBars from "./status-bars"
 import CampfireInventory from "../ui/campfire-inventory"
 import InteractionPrompt from "./interaction-prompt"
-import Minimap from "./minimap"
+import AdvancedMinimap from "../ui/AdvancedMinimap"
 import { useInventory } from "@/lib/inventory-context"
 import { useCrafting } from "@/lib/crafting-context"
 import { useInteraction } from "@/lib/interaction-context"
@@ -39,7 +39,7 @@ export default function HUD({
   const { isOpen: isInventoryOpen, activeCampfire, inventoryOpenedBy } = useInventory()
   const { setIsOpen: setCraftingOpen } = useCrafting()
   const { showPrompt, promptMessage } = useInteraction()
-  const { playerPosition, playerRotation, terrainHeightData, terrainSize, treeInstances, stoneInstances, placedItems } = useGameState()
+  const { playerPosition, playerRotation, terrainHeightData, terrainSize, treeInstances, stoneInstances, placedItems, enemies, placedDoors, villageHouses } = useGameState()
 
   // When inventory is opened or closed, also open or close crafting, but only if opened via Tab
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function HUD({
 
       {/* Minimap - always show when playing and not in inventory */}
       {isLocked && !isInventoryOpen && terrainReady && (
-        <Minimap
+        <AdvancedMinimap
           terrainHeightData={terrainHeightData}
           terrainSize={terrainSize}
           playerPosition={new THREE.Vector3(playerPosition.x, playerPosition.y, playerPosition.z)}
@@ -79,6 +79,11 @@ export default function HUD({
           trees={treeInstances}
           stones={stoneInstances}
           placedItems={placedItems}
+          villageHouses={villageHouses || []}
+          enemies={enemies || []}
+          placedDoors={placedDoors || []}
+          campfires={[]}
+          storageBoxes={[]}
         />
       )}
 

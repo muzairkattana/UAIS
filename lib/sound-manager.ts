@@ -337,7 +337,7 @@ class SoundManager {
     if (!availableInstance && config.minDuration) {
       const now = Date.now()
       availableInstance = instances.find(
-        (instance) => instance.playStartTime && now - instance.playStartTime > config.minDuration && instance.loaded,
+        (instance) => instance.playStartTime && now - instance.playStartTime > (config.minDuration || 0) && instance.loaded,
       )
     }
 

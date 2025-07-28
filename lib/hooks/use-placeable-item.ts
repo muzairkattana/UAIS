@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
-import { useSoundManager } from "@/lib/sound-manager"
+import { useSoundManager, type SoundId } from "@/lib/sound-manager"
 import { useNotifications } from "@/lib/notification-context"
 import { useToolbar } from "@/lib/toolbar-context"
 import { useItemManager } from "@/lib/item-manager-context"
@@ -11,7 +11,7 @@ import { useItemManager } from "@/lib/item-manager-context"
 export interface PlaceableItemConfig {
   itemType: string
   verticalOffset: number
-  placementSound?: string
+  placementSound?: SoundId
   notificationIcon?: string
 }
 

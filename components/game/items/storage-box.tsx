@@ -20,7 +20,7 @@ export default function StorageBox({ position, normal = [0, 1, 0], isGhost = fal
     quaternion.setFromUnitVectors(up, normalVector)
     const euler = new THREE.Euler()
     euler.setFromQuaternion(quaternion)
-    return [euler.x, euler.y, euler.z]
+    return [euler.x, euler.y, euler.z] as [number, number, number]
   }, [normal])
 
   return (
