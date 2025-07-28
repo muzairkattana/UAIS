@@ -84,23 +84,21 @@ export default function HUD({
       {/* Test Minimap - always show for debugging */}
       <TestMinimap />
       
-      {/* Original Minimap - always show when playing and not in inventory */}
-      {isLocked && !isInventoryOpen && terrainReady && (
-        <AdvancedMinimap
-          terrainHeightData={terrainHeightData}
-          terrainSize={terrainSize}
-          playerPosition={new THREE.Vector3(playerPosition.x, playerPosition.y, playerPosition.z)}
-          playerRotation={playerRotation}
-          trees={treeInstances}
-          stones={stoneInstances}
-          placedItems={placedItems}
-          villageHouses={villageHouses || []}
-          enemies={enemies || []}
-          placedDoors={placedDoors || []}
-          campfires={[]}
-          storageBoxes={[]}
-        />
-      )}
+      {/* AdvancedMinimap - always show for testing (no conditions) */}
+      <AdvancedMinimap
+        terrainHeightData={terrainHeightData || []}
+        terrainSize={terrainSize || { width: 400, depth: 400 }}
+        playerPosition={new THREE.Vector3(playerPosition?.x || 0, playerPosition?.y || 0, playerPosition?.z || 0)}
+        playerRotation={playerRotation || 0}
+        trees={treeInstances || []}
+        stones={stoneInstances || []}
+        placedItems={placedItems || []}
+        villageHouses={villageHouses || []}
+        enemies={enemies || []}
+        placedDoors={placedDoors || []}
+        campfires={[]}
+        storageBoxes={[]}
+      />
 
       {/* Campfire inventory - show when active campfire is set */}
       {activeCampfire && (

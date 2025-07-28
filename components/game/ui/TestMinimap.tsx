@@ -7,7 +7,7 @@ const TestMinimap: React.FC = () => {
   
   return (
     <div 
-      className="fixed bottom-4 left-4 z-50 bg-red-500 text-white p-4 rounded-lg border-2 border-white"
+      className="fixed top-4 right-4 z-50 bg-red-500 text-white p-4 rounded-lg border-2 border-white"
       style={{
         width: '200px',
         height: '200px',
