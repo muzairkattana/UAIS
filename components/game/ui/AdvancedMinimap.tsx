@@ -68,7 +68,14 @@ const AdvancedMinimap: React.FC<MinimapProps> = ({
   const [isZoomedOut, setIsZoomedOut] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { settings } = useSettings()
+  // Fallback for settings to prevent crashes
+  let settings
+  try {
+    settings = useSettings().settings
+  } catch (error) {
+    console.warn('Settings context not available, using fallback')
+    settings = {}
+  }
 
   // Minimap dimensions
   const minimapSize = 220
@@ -354,8 +361,21 @@ const AdvancedMinimap: React.FC<MinimapProps> = ({
     golem: '#A0522D' // Sienna
   }
 
-  if (!isVisible) return null
+  // Debug minimap rendering
+  console.log('AdvancedMinimap Debug:', {
+    isVisible,
+    playerPosition,
+    terrainHeightDataLength: terrainHeightData?.length || 0,
+    villageHousesLength: villageHouses?.length || 0,
+    enemiesLength: enemies?.length || 0
+  })
 
+  if (!isVisible) {
+    console.log('AdvancedMinimap: Not visible, returning null')
+    return null
+  }
+
+  console.log('AdvancedMinimap: Rendering minimap')
   return (
     <div className="fixed bottom-4 left-4 z-50">
       {/* Outer glow effect */}

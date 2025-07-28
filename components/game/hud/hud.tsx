@@ -41,6 +41,17 @@ export default function HUD({
   const { showPrompt, promptMessage } = useInteraction()
   const { playerPosition, playerRotation, terrainHeightData, terrainSize, treeInstances, stoneInstances, placedItems, enemies, placedDoors, villageHouses } = useGameState()
 
+  // Debug minimap conditions
+  console.log('HUD Debug:', {
+    isLocked,
+    isInventoryOpen,
+    terrainReady,
+    shouldShowMinimap: isLocked && !isInventoryOpen && terrainReady,
+    playerPosition,
+    terrainHeightData: terrainHeightData ? terrainHeightData.length : 0,
+    villageHouses: villageHouses ? villageHouses.length : 0
+  })
+
   // When inventory is opened or closed, also open or close crafting, but only if opened via Tab
   useEffect(() => {
     setCraftingOpen(isInventoryOpen && inventoryOpenedBy === "tab")
