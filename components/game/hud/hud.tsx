@@ -9,6 +9,7 @@ import StatusBars from "./status-bars"
 import CampfireInventory from "../ui/campfire-inventory"
 import InteractionPrompt from "./interaction-prompt"
 import AdvancedMinimap from "../ui/AdvancedMinimap"
+import TestMinimap from "../ui/TestMinimap"
 import { useInventory } from "@/lib/inventory-context"
 import { useCrafting } from "@/lib/crafting-context"
 import { useInteraction } from "@/lib/interaction-context"
@@ -80,7 +81,10 @@ export default function HUD({
       {/* Crafting - only show when inventory opened via Tab */}
       <CraftingGrid visible={isInventoryOpen && inventoryOpenedBy === "tab"} />
 
-      {/* Minimap - always show when playing and not in inventory */}
+      {/* Test Minimap - always show for debugging */}
+      <TestMinimap />
+      
+      {/* Original Minimap - always show when playing and not in inventory */}
       {isLocked && !isInventoryOpen && terrainReady && (
         <AdvancedMinimap
           terrainHeightData={terrainHeightData}
