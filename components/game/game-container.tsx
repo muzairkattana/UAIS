@@ -30,6 +30,7 @@ import { StorageBoxProvider } from "@/lib/storage-box-context"
 import StorageBoxInventory from "./ui/storage-box-inventory"
 import { InteractionProvider } from "@/lib/interaction-context"
 import { ItemManagerProvider } from "@/lib/item-manager-context"
+import { BuildingProvider } from "@/lib/building-context"
 
 // Initialize sound manager early - but only in browser
 let soundManager: any = null
@@ -874,8 +875,10 @@ export default function GameContainer() {
                       <CraftingProvider>
                         <ItemManagerProvider>
                           <InteractionProvider>
-                            <GameContainerInner />
-                            <NotificationContainer />
+                            <BuildingProvider>
+                              <GameContainerInner />
+                              <NotificationContainer />
+                            </BuildingProvider>
                           </InteractionProvider>
                         </ItemManagerProvider>
                       </CraftingProvider>

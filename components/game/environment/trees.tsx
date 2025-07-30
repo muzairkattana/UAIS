@@ -17,7 +17,7 @@ interface TreesProps {
   maxRenderDistance?: number
 }
 
-export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxRenderDistance = 150 }: TreesProps) {
+export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxRenderDistance = 400 }: TreesProps) {
   const { playerPosition, treeInstances, setTreeInstances } = useGameState()
   const { camera } = useThree()
   const soundManager = useSoundManager()
@@ -54,18 +54,18 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
     setTreeInstances(trees)
   }, [terrainHeightData, terrainSize, waterLevel, treeInstances.length])
 
-  // Create materials
+  // Create materials with more natural colors
   const trunkMaterial = useMemo(() => {
     return new THREE.MeshStandardMaterial({
-      color: 0x8b4513, // Brown
+      color: 0x654321, // Rich brown bark color
       roughness: 0.9,
-      metalness: 0.1,
+      metalness: 0.05,
     })
   }, [])
 
   const foliageMaterial = useMemo(() => {
     return new THREE.MeshStandardMaterial({
-      color: 0x2e8b57, // Sea green
+      color: 0x228b22, // Forest green - more vibrant
       roughness: 0.8,
       metalness: 0.0,
     })
@@ -73,7 +73,7 @@ export default function Trees({ terrainHeightData, terrainSize, waterLevel, maxR
 
   const foliageMaterial2 = useMemo(() => {
     return new THREE.MeshStandardMaterial({
-      color: 0x3cb371, // Medium sea green (slightly different shade)
+      color: 0x32cd32, // Lime green - brighter variation
       roughness: 0.8,
       metalness: 0.0,
     })

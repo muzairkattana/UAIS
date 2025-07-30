@@ -78,7 +78,7 @@ const AdvancedMinimap: React.FC<MinimapProps> = ({
   }
 
   // Minimap dimensions
-  const minimapSize = 220
+  const minimapSize = 180
   const minimapRadius = minimapSize / 2
   
   // Zoom levels
@@ -143,27 +143,20 @@ const AdvancedMinimap: React.FC<MinimapProps> = ({
     ctx.beginPath()
     ctx.arc(minimapRadius, minimapRadius, minimapRadius - 4, 0, Math.PI * 2)
     
-    // Create radial gradient for background
+    // Create modern gradient background
     const bgGradient = ctx.createRadialGradient(
       minimapRadius, minimapRadius, 0,
       minimapRadius, minimapRadius, minimapRadius
     )
-    bgGradient.addColorStop(0, "rgba(15, 30, 60, 0.95)")
-    bgGradient.addColorStop(0.7, "rgba(10, 25, 50, 0.9)")
-    bgGradient.addColorStop(1, "rgba(5, 15, 30, 0.85)")
+    bgGradient.addColorStop(0, "rgba(20, 25, 35, 0.95)")
+    bgGradient.addColorStop(0.8, "rgba(15, 20, 30, 0.9)")
+    bgGradient.addColorStop(1, "rgba(10, 15, 25, 0.85)")
     ctx.fillStyle = bgGradient
     ctx.fill()
     
-    // Add border with glow effect
-    ctx.strokeStyle = "rgba(120, 180, 255, 0.8)"
-    ctx.lineWidth = 2
-    ctx.stroke()
-    
-    // Add inner border
-    ctx.beginPath()
-    ctx.arc(minimapRadius, minimapRadius, minimapRadius - 6, 0, Math.PI * 2)
-    ctx.strokeStyle = "rgba(80, 140, 200, 0.4)"
-    ctx.lineWidth = 1
+    // Modern sleek border
+    ctx.strokeStyle = "rgba(64, 224, 208, 0.6)"
+    ctx.lineWidth = 1.5
     ctx.stroke()
     ctx.restore()
 
@@ -221,11 +214,11 @@ const AdvancedMinimap: React.FC<MinimapProps> = ({
       ctx.putImageData(terrainImageData, 0, 0)
     }
 
-    // Draw grid overlay
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)"
-    ctx.lineWidth = 0.5
-    for (let i = 1; i < 8; i++) {
-      const pos = (i / 8) * minimapSize
+    // Draw subtle grid overlay
+    ctx.strokeStyle = "rgba(64, 224, 208, 0.12)"
+    ctx.lineWidth = 0.3
+    for (let i = 1; i < 6; i++) {
+      const pos = (i / 6) * minimapSize
       ctx.beginPath()
       ctx.moveTo(pos, 0)
       ctx.lineTo(pos, minimapSize)
@@ -292,54 +285,54 @@ const AdvancedMinimap: React.FC<MinimapProps> = ({
       }
     })
 
-    // Draw player indicator (center) with glow
-    ctx.shadowColor = "rgba(0, 191, 255, 0.8)"
-    ctx.shadowBlur = 8
+    // Draw modern player indicator with glow
+    ctx.shadowColor = "rgba(64, 224, 208, 0.9)"
+    ctx.shadowBlur = 10
     ctx.beginPath()
-    ctx.arc(minimapRadius, minimapRadius, 5, 0, Math.PI * 2)
-    ctx.fillStyle = "rgba(0, 191, 255, 0.95)"
+    ctx.arc(minimapRadius, minimapRadius, 4, 0, Math.PI * 2)
+    ctx.fillStyle = "rgba(64, 224, 208, 1)"
     ctx.fill()
     ctx.shadowBlur = 0
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.9)"
-    ctx.lineWidth = 2
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.8)"
+    ctx.lineWidth = 1.5
     ctx.stroke()
 
-    // Draw player direction indicator with glow
-    const directionLength = 15
+    // Draw modern direction indicator
+    const directionLength = 12
     const directionX = Math.sin(playerRotation) * directionLength
     const directionY = -Math.cos(playerRotation) * directionLength
     
-    ctx.shadowColor = "rgba(255, 255, 100, 0.8)"
-    ctx.shadowBlur = 6
+    ctx.shadowColor = "rgba(255, 215, 0, 0.8)"
+    ctx.shadowBlur = 4
     ctx.beginPath()
     ctx.moveTo(minimapRadius, minimapRadius)
     ctx.lineTo(minimapRadius + directionX, minimapRadius + directionY)
-    ctx.strokeStyle = "rgba(255, 255, 100, 0.95)"
-    ctx.lineWidth = 3
+    ctx.strokeStyle = "rgba(255, 215, 0, 1)"
+    ctx.lineWidth = 2.5
     ctx.stroke()
     ctx.shadowBlur = 0
 
     // Draw compass directions
     ctx.restore()
     
-    // Compass markers styling
-    ctx.fillStyle = "rgba(255, 255, 255, 0.9)"
-    ctx.font = "bold 11px Arial"
+    // Modern compass markers
+    ctx.fillStyle = "rgba(64, 224, 208, 0.9)"
+    ctx.font = "bold 10px 'Segoe UI', Arial, sans-serif"
     ctx.textAlign = "center"
-    ctx.shadowColor = "rgba(0, 0, 0, 0.8)"
-    ctx.shadowBlur = 2
+    ctx.shadowColor = "rgba(0, 0, 0, 0.9)"
+    ctx.shadowBlur = 3
     
     // North indicator
-    ctx.fillText("N", minimapRadius, 18)
+    ctx.fillText("N", minimapRadius, 16)
     
     // East indicator
-    ctx.fillText("E", minimapSize - 18, minimapRadius + 4)
+    ctx.fillText("E", minimapSize - 16, minimapRadius + 4)
     
     // South indicator
-    ctx.fillText("S", minimapRadius, minimapSize - 10)
+    ctx.fillText("S", minimapRadius, minimapSize - 8)
     
     // West indicator
-    ctx.fillText("W", 18, minimapRadius + 4)
+    ctx.fillText("W", 16, minimapRadius + 4)
     
     ctx.shadowBlur = 0
 
@@ -378,27 +371,36 @@ const AdvancedMinimap: React.FC<MinimapProps> = ({
   console.log('AdvancedMinimap: Rendering minimap')
   return (
     <div className="fixed bottom-4 left-4 z-50">
-      {/* Outer glow effect */}
+      {/* Modern outer glow */}
       <div 
-        className="absolute inset-0 rounded-full blur-lg opacity-60"
+        className="absolute inset-0 rounded-full blur-xl opacity-40"
         style={{
-          background: "radial-gradient(circle, rgba(120,180,255,0.4) 0%, rgba(0,30,60,0.2) 70%)",
-          width: minimapSize + 12,
-          height: minimapSize + 12,
-          left: -6,
-          top: -6,
+          background: "radial-gradient(circle, rgba(64,224,208,0.3) 0%, rgba(20,25,35,0.1) 70%)",
+          width: minimapSize + 16,
+          height: minimapSize + 16,
+          left: -8,
+          top: -8,
         }}
       />
       
       <div 
-        className="relative bg-black/30 rounded-full p-2 backdrop-blur-sm border-2 border-white/30"
+        className="relative bg-slate-900/80 rounded-full p-1 backdrop-blur-md border border-teal-400/40"
         style={{
           width: minimapSize,
           height: minimapSize,
-          boxShadow: '0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(120, 180, 255, 0.1)',
-          cursor: 'pointer'
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(64, 224, 208, 0.2)',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
         }}
         onClick={toggleZoom}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.02)'
+          e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(64, 224, 208, 0.3)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+          e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(64, 224, 208, 0.2)'
+        }}
         title={`Click to ${isZoomedOut ? 'zoom in' : 'zoom out'}`}
       >
         {/* Canvas for terrain and basic elements */}
@@ -552,40 +554,44 @@ const AdvancedMinimap: React.FC<MinimapProps> = ({
           })}
         </svg>
         
-        {/* Toggle visibility button */}
+        {/* Modern toggle button */}
         <button
           onClick={(e) => {
             e.stopPropagation()
             setIsVisible(!isVisible)
           }}
-          className="absolute -top-2 -right-2 w-7 h-7 bg-black/60 hover:bg-black/80 rounded-full border border-white/40 flex items-center justify-center text-white text-xs transition-all duration-200 hover:scale-110"
+          className="absolute -top-1 -right-1 w-6 h-6 bg-slate-800/90 hover:bg-slate-700/90 rounded-full border border-teal-400/50 flex items-center justify-center text-teal-300 text-xs transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-teal-400/20"
           title={isVisible ? "Hide Minimap" : "Show Minimap"}
         >
           {isVisible ? "−" : "+"}
         </button>
 
-        {/* Zoom indicator */}
+        {/* Modern zoom indicator */}
         <div
-          className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded-lg text-xs font-bold border border-white/30"
+          className="absolute top-1 right-1 bg-slate-800/90 text-teal-300 px-2 py-0.5 rounded-md text-xs font-semibold border border-teal-400/30 backdrop-blur-sm"
         >
           {isZoomedOut ? 'WIDE' : 'CLOSE'}
         </div>
         
-        {/* Scale indicator */}
-        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
-          <div className="bg-black/70 backdrop-blur-sm rounded-lg px-3 py-1 text-white text-xs border border-white/30">
-            Scale: 1:{currentZoom}
+        {/* Modern scale indicator */}
+        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
+          <div className="bg-slate-800/90 backdrop-blur-md rounded-lg px-3 py-1 text-teal-300 text-xs border border-teal-400/30 font-medium">
+            1:{currentZoom}m
           </div>
         </div>
       </div>
       
-      {/* Legend */}
+      {/* Modern compact legend */}
       <div
-        className="absolute -bottom-16 left-0 right-0 bg-black/80 text-white p-2 rounded-lg text-xs text-center border border-white/30"
-        style={{ fontSize: '9px' }}
+        className="absolute -bottom-14 left-0 right-0 bg-slate-800/95 text-teal-300 p-2 rounded-lg text-center border border-teal-400/30 backdrop-blur-md"
+        style={{ fontSize: '10px' }}
       >
-        <div>🔵 Player | 🏠 Houses | 👹 Enemies</div>
-        <div>🔥 Campfires | 📦 Storage | 🚪 Doors | 🌳 Trees</div>
+        <div className="flex justify-center space-x-3 font-medium">
+          <span>🎯 You</span>
+          <span>🏠 Houses</span>
+          <span>👹 Enemies</span>
+          <span>🔥 Camps</span>
+        </div>
       </div>
     </div>
   )

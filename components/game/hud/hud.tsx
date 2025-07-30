@@ -1,6 +1,5 @@
 "use client"
 import { useEffect } from "react"
-import Crosshair from "./crosshair"
 import AmmoCounter from "./ammo-counter"
 import Toolbar from "./toolbar"
 import InventoryGrid from "./inventory-grid"
@@ -9,7 +8,8 @@ import StatusBars from "./status-bars"
 import CampfireInventory from "../ui/campfire-inventory"
 import InteractionPrompt from "./interaction-prompt"
 import AdvancedMinimap from "../ui/AdvancedMinimap"
-import TestMinimap from "../ui/TestMinimap"
+import BuildingHUD from "../ui/BuildingHUD"
+import { ConstructionUI } from "../ui/ConstructionInterface"
 import { useInventory } from "@/lib/inventory-context"
 import { useCrafting } from "@/lib/crafting-context"
 import { useInteraction } from "@/lib/interaction-context"
@@ -53,24 +53,22 @@ export default function HUD({
     villageHouses: villageHouses ? villageHouses.length : 0
   })
 
-  // When inventory is opened or closed, also open or close crafting, but only if opened via Tab
+  // When inventory is opened or closed, also open or close crafting, but only if opened via I key
   useEffect(() => {
     setCraftingOpen(isInventoryOpen && inventoryOpenedBy === "tab")
   }, [isInventoryOpen, inventoryOpenedBy, setCraftingOpen])
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Crosshair - only show when locked and not in inventory */}
-      {isLocked && showCrosshair && !isInventoryOpen && <Crosshair />}
 
-      {/* Ammo counter - only show when locked and not in inventory */}
-      {isLocked && !isInventoryOpen && <AmmoCounter current={ammo.current} reserve={ammo.reserve} />}
+      {/* Ammo counter - always show when not in inventory */}
+      {!isInventoryOpen && <AmmoCounter current={ammo.current} reserve={ammo.reserve} />}
 
       {/* Status bars - always show when playing */}
-      {isLocked && !isInventoryOpen && <StatusBars />}
+      {!isInventoryOpen && <StatusBars />}
 
       {/* Interaction prompt - show when near interactable items */}
-      {isLocked && !isInventoryOpen && showPrompt && <InteractionPrompt />}
+      {!isInventoryOpen && showPrompt && <InteractionPrompt />}
 
       {/* Toolbar - always show, regardless of inventory state */}
       <Toolbar />
@@ -81,8 +79,6 @@ export default function HUD({
       {/* Crafting - only show when inventory opened via Tab */}
       <CraftingGrid visible={isInventoryOpen && inventoryOpenedBy === "tab"} />
 
-      {/* Test Minimap - always show for debugging */}
-      <TestMinimap />
       
       {/* AdvancedMinimap - always show for testing (no conditions) */}
       <AdvancedMinimap
@@ -100,6 +96,9 @@ export default function HUD({
         storageBoxes={[]}
       />
 
+      {/* Building HUD - show when terrain is ready and not in inventory */}
+      {/* {isLocked && !isInventoryOpen && terrainReady && <BuildingHUD />} */}
+
       {/* Campfire inventory - show when active campfire is set */}
       {activeCampfire && (
         <CampfireInventory
@@ -109,6 +108,9 @@ export default function HUD({
           isActive={false}
         />
       )}
+
+      {/* Construction UI - render outside R3F context */}
+      <ConstructionUI isActive={terrainReady && gameStatus === "playing"} />
     </div>
   )
 }

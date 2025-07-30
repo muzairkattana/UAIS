@@ -57,9 +57,27 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const [inventoryOpenedBy, setInventoryOpenedBy] = useState<InventoryOpenedBy>("tab")
   const [closedByTab, setClosedByTab] = useState(false)
 
-  // Initialize inventory with empty slots (no default items)
+  // Initialize inventory with starter resources for crafting
   useEffect(() => {
-    setInventoryItems(createEmptyInventory())
+    const starterInventory = createEmptyInventory()
+    
+    // Add starter resources for crafting
+    starterInventory[0] = {
+      id: "wood_starter",
+      type: "resource",
+      name: "Wood",
+      icon: "/wood.png",
+      quantity: 1000
+    }
+    starterInventory[1] = {
+      id: "stone_starter", 
+      type: "resource",
+      name: "Stone",
+      icon: "/stone.png",
+      quantity: 500
+    }
+    
+    setInventoryItems(starterInventory)
   }, [])
 
   // Function to exit pointer lock
@@ -164,8 +182,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   // Simplified Tab key handler to toggle inventory
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Handle Tab key to toggle inventory
-      if (e.key === "Tab") {
+      // Handle I key to toggle inventory  
+      if (e.key === "i" || e.key === "I") {
         e.preventDefault()
         e.stopPropagation()
 

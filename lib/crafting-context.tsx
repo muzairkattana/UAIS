@@ -143,6 +143,39 @@ const CRAFTING_RECIPES: CraftingRecipe[] = [
     ],
     category: "tools",
   },
+  {
+    id: "recipe_basic_house",
+    name: "Basic House",
+    icon: "/placeholder-logo.png", // Placeholder icon
+    description: "A simple house for basic shelter.",
+    result: {
+      id: "item_basic_house",
+      type: "item",
+      name: "Basic House",
+      icon: "/placeholder-logo.png", // Placeholder icon
+    },
+    ingredients: [
+      { itemType: "Wood", quantity: 500 },
+      { itemType: "Stone", quantity: 200 },
+    ],
+    category: "structures",
+  },
+  {
+    id: "recipe_stone_wall",
+    name: "Stone Wall",
+    icon: "/stone.png", // Placeholder icon
+    description: "A sturdy wall for defense.",
+    result: {
+      id: "item_stone_wall",
+      type: "item",
+      name: "Stone Wall",
+      icon: "/stone.png", // Placeholder icon
+    },
+    ingredients: [
+      { itemType: "Stone", quantity: 150 },
+    ],
+    category: "structures",
+  },
 ]
 
 // Create a provider for the crafting context

@@ -11,7 +11,7 @@ import * as THREE from "three"
 import Player from "./player/player"
 import Trees from "./environment/trees"
 import StoneNodes from "./environment/stone-nodes"
-import Sky from "./environment/sky"
+import Grass from "./environment/grass"
 import { useGameState as useGameContext } from "@/lib/game-context"
 import { usePlayerStatus } from "@/lib/player-status-context"
 import { useSettings } from "@/lib/settings-context"
@@ -27,6 +27,7 @@ import Weapon from "./weapons/weapon"
 import Hatchet from "./tools/hatchet"
 import Pickaxe from "./tools/pickaxe"
 import BuildingPlan from "./tools/building-plan"
+import HomePlacer from "./tools/home-placer"
 
 // Import item manager
 import { useItemManager } from "@/lib/item-manager-context"
@@ -64,7 +65,11 @@ import Camp from "./structures/Camp"
 import Army from "./armies/Army"
 import { useArmyCamp } from "@/lib/army-camp-context"
 
-export const MAX_RENDER_DISTANCE = 150
+// Import building system components
+import { Construction3D, ConstructionUI } from "./ui/ConstructionInterface"
+import { useBuilding } from "@/lib/building-context"
+
+export const MAX_RENDER_DISTANCE = 400
 
 interface GameSceneProps {
   isLocked: boolean
@@ -115,7 +120,7 @@ export default function GameScene({
   setIsLocked,
   onTerrainReady,
   maxRenderDistance = MAX_RENDER_DISTANCE,
-  fogDensity = 1.0,
+  fogDensity = 0.25,
   onAmmoChange,
   onPointerLockError,
   onCampfirePromptChange,
@@ -130,6 +135,11 @@ export default function GameScene({
   setPlacedStorageBoxes,
 }: GameSceneProps) {
   const { scene, camera } = useThree()
+  
+  // Set scene background color to sky blue
+  useEffect(() => {
+    scene.background = new THREE.Color(0x87CEEB) // Sky blue
+  }, [scene])
   const { 
     bulletTrails, 
     setTerrainHeightData, 
@@ -145,7 +155,7 @@ export default function GameScene({
   } = useGameContext()
   const { gameStatus } = useGameState()
   const { settings } = useSettings()
-  const { selectedSlot, items } = useToolbar()
+  const { selectedSlot, items, removeItemFromSlot } = useToolbar()
   const { isOpen: isInventoryOpen } = useInventory()
   const { campfires } = useCampfire()
   const { storageBoxes } = useStorageBox()
@@ -154,6 +164,8 @@ export default function GameScene({
   const [walls, setWalls] = useState<any[]>([])
   const [terrainReady, setTerrainReady] = useState(false)
   const [houseLocation, setHouseLocation] = useState<{ position: THREE.Vector3; rotation: number } | null>(null)
+  // Player-built houses
+  const [playerHouses, setPlayerHouses] = useState<Array<{id: string, position: [number, number, number]}>>([]) 
   // Village houses are now managed in global context
   const [isDoorOpen, setIsDoorOpen] = useState(false)
   const [keys, setKeys] = useState({
@@ -261,18 +273,18 @@ export default function GameScene({
     console.log("Generating terrain...")
     terrainGenerated.current = true
 
-    // Set terrain parameters
+    // Set terrain parameters - 2x bigger world with flat building areas
     const params: TerrainParams = {
       seed: "webgo-fps-12345", // Fixed seed for consistent generation
-      width: 400, // Increased from 100 to 400 (4x wider)
-      depth: 400, // Increased from 100 to 400 (4x deeper)
-      height: 8, // Reduced from 15 to 8 for flatter terrain
-      scale: 120, // Increased from 50 to 120 to spread out features on the larger map
-      octaves: 4, // Reduced from 5 to 5 for smoother terrain
-      persistence: 0.45, // Slightly reduced from 0.5 for less dramatic height changes
-      lacunarity: 2.0,
-      heightOffset: -4, // Adjusted from -5 to -4
-      waterLevel: 0.25, // Lowered from 0.3 to 0.25
+      width: 800, // 2x bigger: 400 -> 800 (manageable size)
+      depth: 800, // 2x bigger: 400 -> 800 (manageable size)
+      height: 6, // Even flatter terrain for easier building
+      scale: 200, // Larger scale for the bigger world
+      octaves: 3, // Fewer octaves for smoother, flatter terrain
+      persistence: 0.3, // Lower persistence for less dramatic height changes
+      lacunarity: 1.8,
+      heightOffset: -3, // Slightly higher base level
+      waterLevel: 0.2, // Lower water level to create more land
     }
 
     // Create terrain generator
@@ -292,19 +304,19 @@ export default function GameScene({
     return { terrainGeometry, waterGeometry, terrainParams: params }
   }, [])
 
-  // Create materials with solid colors (no textures)
+  // Create materials with original colors
   const terrainMaterial = useMemo(() => {
-    // Create a material with a solid color and proper settings
+    // Create a material with the original olive green color
     return new THREE.MeshStandardMaterial({
-      color: 0x556b2f, // Olive green
+      color: 0x556b2f, // Original olive green
       roughness: 0.8,
       metalness: 0.1,
-      side: THREE.DoubleSide, // Render both sides as a temporary fix
-      transparent: false, // Make sure it's not transparent
-      opacity: 1.0, // Fully opaque
-      flatShading: false, // Smooth shading for better appearance
-      depthWrite: true, // Ensure depth is written
-      depthTest: true, // Ensure depth testing is enabled
+      side: THREE.DoubleSide, // Render both sides as originally
+      transparent: false,
+      opacity: 1.0,
+      flatShading: false,
+      depthWrite: true,
+      depthTest: true,
     })
   }, [])
 
@@ -659,13 +671,12 @@ export default function GameScene({
       visible: false, // Make walls invisible
     })
 
-    // Create boundary walls
+    // Create boundary walls for 2x bigger world
     const walls = []
-    const size = 200 // Half the terrain size (increased from 50 to 200)
+    const size = 400 // Half the terrain size for 800x800 world
 
     // Add boundary walls
-    for (let i = -size; i <= size; i += 10) {
-      // Increased step from 5 to 10 for efficiency
+    for (let i = -size; i <= size; i += 20) {
       // North wall
       walls.push({
         position: [i, 5, -size],
@@ -732,7 +743,20 @@ export default function GameScene({
     } else if (currentItem.id === "tool_pickaxe") {
       return <Pickaxe isLocked={isLocked} />
     } else if (currentItem.id.startsWith("tool_building_plan")) {
-      return <BuildingPlan isLocked={isLocked} />
+      return (
+        <HomePlacer
+          isLocked={isLocked}
+          terrainHeightData={terrainHeightData || localTerrainHeightData}
+          onHomePlaced={(position) => {
+            const newHouse = {
+              id: `player-house-${Date.now()}`,
+              position
+            }
+            setPlayerHouses(prev => [...prev, newHouse])
+            console.log('Player house placed at:', position)
+          }}
+        />
+      )
     } else if (currentItem.id.startsWith("item_campfire")) {
       return (
         <CampfirePlacer
@@ -768,6 +792,44 @@ export default function GameScene({
           setPlacedDoors={setPlacedDoors}
         />
       )
+    } else if (currentItem.id.startsWith("item_basic_house")) {
+      return (
+        <HomePlacer
+          isLocked={isLocked}
+          terrainHeightData={terrainHeightData || localTerrainHeightData}
+          onHomePlaced={(position) => {
+            const newHouse = {
+              id: `basic-house-${Date.now()}`,
+              position
+            }
+            setPlayerHouses(prev => [...prev, newHouse])
+            console.log('Basic house placed at:', position)
+            
+            // Remove the item from inventory after placing
+            removeItemFromSlot(selectedSlot)
+          }}
+        />
+      )
+    } else if (currentItem.id.startsWith("item_stone_wall")) {
+      // For now, use the existing building plan placer - you can create a specific wall placer later
+      return (
+        <HomePlacer
+          isLocked={isLocked}
+          terrainHeightData={terrainHeightData || localTerrainHeightData}
+          onHomePlaced={(position) => {
+            // For stone walls, we'll create a simple wall structure
+            const newWall = {
+              id: `stone-wall-${Date.now()}`,
+              position
+            }
+            setPlayerHouses(prev => [...prev, newWall])
+            console.log('Stone wall placed at:', position)
+            
+            // Remove the item from inventory after placing
+            removeItemFromSlot(selectedSlot)
+          }}
+        />
+      )
     }
 
     console.warn(`Unknown item type: ${currentItem.id}`)
@@ -780,10 +842,10 @@ export default function GameScene({
   // Create fog - matching the sky color for a natural blend
   const fogColor = useMemo(() => skyColor.clone(), [skyColor])
   const fogParams = useMemo(() => {
-    // Fog starts at 50 units away and becomes completely opaque at maxRenderDistance
-    // Adjust fog density based on settings
-    const near = fogDensity === 0 ? maxRenderDistance : 50 / fogDensity
-    const far = maxRenderDistance
+    // Fog starts much further away and is less dense for better distant visibility
+    // Adjust fog density based on settings - make it much lighter
+    const near = fogDensity === 0 ? maxRenderDistance : Math.max(200, 100 / fogDensity)
+    const far = Math.max(maxRenderDistance * 1.5, 600) // Extend fog distance
 
     return {
       near,
@@ -826,6 +888,15 @@ export default function GameScene({
       cabinetOpen: boolean
     }
   }>({})
+
+  // Building system integration
+  let buildingSystem
+  try {
+    buildingSystem = useBuilding()
+  } catch (error) {
+    console.warn('Building context not available:', error)
+    buildingSystem = null
+  }
 
   // Enemies and doors are now managed in global context
   const [playerPosition, setPlayerPosition] = useState<THREE.Vector3>(new THREE.Vector3())
@@ -883,20 +954,31 @@ export default function GameScene({
     <>
       <PointerLockControls ref={controls} />
 
-      {/* Improved lighting for better terrain visibility */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[50, 100, 50]} intensity={1.0} castShadow={settings.graphics?.enableShadows} />
-      <directionalLight position={[-50, 50, -50]} intensity={0.5} castShadow={settings.graphics?.enableShadows} />
+      {/* Improved lighting for better distant visibility */}
+      <ambientLight intensity={0.8} />
+      <directionalLight 
+        position={[100, 200, 100]} 
+        intensity={1.2} 
+        castShadow={settings.graphics?.enableShadows}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={1000}
+        shadow-camera-left={-500}
+        shadow-camera-right={500}
+        shadow-camera-top={500}
+        shadow-camera-bottom={-500}
+      />
+      <directionalLight position={[-100, 100, -100]} intensity={0.7} castShadow={settings.graphics?.enableShadows} />
+      {/* Additional light for better overall visibility */}
+      <hemisphereLight 
+        skyColor={0x87CEEB} 
+        groundColor={0x556b2f} 
+        intensity={0.5} 
+      />
+
+      {/* Simple Sky Background - No geometry, just scene background */}
 
       <Physics>
-
-      {/* Professional Sky System with Sun and Clouds */}
-      <Sky 
-        sunPosition={[100, 120, 50]}
-        cloudCount={8}
-        cloudDensity={0.7}
-        timeOfDay="day"
-      />
 
       {/* Enhanced fog with smooth blending - only if fog density > 0 */}
       {fogDensity > 0 && <fog attach="fog" args={[fogColor, fogParams.near, fogParams.far]} />}
@@ -932,6 +1014,12 @@ export default function GameScene({
             maxRenderDistance={maxRenderDistance}
           />
           <StoneNodes
+            terrainHeightData={terrainHeightData || localTerrainHeightData}
+            terrainSize={{ width: terrainParams.width, depth: terrainParams.depth }}
+            waterLevel={waterLevel}
+            maxRenderDistance={maxRenderDistance}
+          />
+          <Grass
             terrainHeightData={terrainHeightData || localTerrainHeightData}
             terrainSize={{ width: terrainParams.width, depth: terrainParams.depth }}
             waterLevel={waterLevel}
@@ -1170,7 +1258,53 @@ export default function GameScene({
           campId={army.campId}
         />
       ))}
+      
+      {/* Player-built houses */}
+      {playerHouses.map((house) => (
+        <House
+          key={house.id}
+          position={house.position}
+          rotation={[0, 0, 0]}
+          id={house.id}
+        />
+      ))}
+
+      {/* Building System Elements */}
+      {buildingSystem && Array.from(buildingSystem.placedElements.values()).map((element) => (
+        <mesh 
+          key={element.id}
+          position={[element.position.x, element.position.y, element.position.z]}
+          rotation={[element.rotation.x, element.rotation.y, element.rotation.z]}
+          scale={[element.scale.x, element.scale.y, element.scale.z]}
+          onClick={() => buildingSystem.selectElement(element.id)}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial 
+            color={element.color || (
+              element.material === 'wood' ? '#8B4513' :
+              element.material === 'stone' ? '#708090' :
+              element.material === 'metal' ? '#C0C0C0' :
+              element.material === 'glass' ? '#87CEEB' :
+              element.material === 'concrete' ? '#696969' :
+              element.material === 'brick' ? '#CD853F' : '#FFFFFF'
+            )}
+          />
+          {buildingSystem.selectedElement === element.id && (
+            <lineSegments>
+              <edgesGeometry args={[new THREE.BoxGeometry(1.1, 1.1, 1.1)]} />
+              <lineBasicMaterial color="#FFD700" linewidth={3} />
+            </lineSegments>
+          )}
+        </mesh>
+      ))}
+
+      {/* Construction 3D Elements - inside R3F context */}
+      {/* <Construction3D isActive={terrainReady && gameStatus === "playing"} /> */}
+
       </Physics>
+      
+      {/* Construction Interface - This should be moved outside R3F context */}
+      {/* <ConstructionUI isActive={terrainReady && gameStatus === "playing"} /> */}
     </>
   )
 }

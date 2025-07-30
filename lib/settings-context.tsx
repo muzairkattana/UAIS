@@ -5,10 +5,10 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 // Default settings values
 export const DEFAULT_SETTINGS = {
   graphics: {
-    maxRenderDistance: 100, // Reduced from 150 to 100
-    fogDensity: 1.5, // Increased from 1.0 to 1.5 for more fog (better performance)
+    maxRenderDistance: 400, // Increased for better distant visibility
+    fogDensity: 0.25, // Reduced for better distant visibility
     enableShadows: false,
-    quality: "low", // Changed from "medium" to "low"
+    quality: "medium", // Improved quality for better visuals
   },
   controls: {
     mouseSensitivity: 1.0,
