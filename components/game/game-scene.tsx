@@ -70,6 +70,8 @@ import { useArmyCamp } from "@/lib/army-camp-context"
 // Import building system components
 import { Construction3D, ConstructionUI } from "./ui/ConstructionInterface"
 import { useBuilding } from "@/lib/building-context"
+import { useVehicle } from "@/lib/vehicle-context"
+import VehicleCamera from "./player/VehicleCamera"
 
 export const MAX_RENDER_DISTANCE = 400
 
@@ -182,6 +184,7 @@ export default function GameScene({
     KeyC: false, // Changed from ControlLeft to KeyC for crouching
   })
   const { health, hydration, hunger, updateStatus } = usePlayerStatus()
+  const { vehicleState } = useVehicle()
   // Use try-catch to handle the provider error gracefully
   let camps, armies, addCamp, addArmy
   try {
@@ -857,7 +860,7 @@ export default function GameScene({
   }, [fogColor, maxRenderDistance, fogDensity])
 
   // Determine if player movement should be disabled
-  const isPlayerDisabled = gameStatus !== "playing" || isInventoryOpen
+  const isPlayerDisabled = gameStatus !== "playing" || isInventoryOpen || vehicleState.isInVehicle
 
   // Handle campfire interaction
   const handleCampfireInteract = (campfireId: string) => {
@@ -955,6 +958,13 @@ export default function GameScene({
   return (
     <>
       <PointerLockControls ref={controls} />
+      {vehicleState.isInVehicle && (
+        <VehicleCamera 
+          isLocked={isLocked}
+          mouseSensitivity={settings.controls?.mouseSensitivity || 1.0}
+          invertY={settings.controls?.invertY || false}
+        />
+      )}
 
       {/* Improved lighting for better distant visibility */}
       <ambientLight intensity={0.8} />

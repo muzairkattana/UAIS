@@ -31,6 +31,7 @@ import StorageBoxInventory from "./ui/storage-box-inventory"
 import { InteractionProvider } from "@/lib/interaction-context"
 import { ItemManagerProvider } from "@/lib/item-manager-context"
 import { BuildingProvider } from "@/lib/building-context"
+import { TradingProvider } from "@/lib/trading-context"
 
 // Initialize sound manager early - but only in browser
 let soundManager: any = null
@@ -870,20 +871,22 @@ export default function GameContainer() {
             <NotificationProvider>
               <ToolbarProvider>
                 <InventoryProvider>
-                  <CampfireProvider>
-                    <StorageBoxProvider>
-                      <CraftingProvider>
-                        <ItemManagerProvider>
-                          <InteractionProvider>
-                            <BuildingProvider>
-                              <GameContainerInner />
-                              <NotificationContainer />
-                            </BuildingProvider>
-                          </InteractionProvider>
-                        </ItemManagerProvider>
-                      </CraftingProvider>
-                    </StorageBoxProvider>
-                  </CampfireProvider>
+                  <TradingProvider>
+                    <CampfireProvider>
+                      <StorageBoxProvider>
+                        <CraftingProvider>
+                          <ItemManagerProvider>
+                            <InteractionProvider>
+                              <BuildingProvider>
+                                <GameContainerInner />
+                                <NotificationContainer />
+                              </BuildingProvider>
+                            </InteractionProvider>
+                          </ItemManagerProvider>
+                        </CraftingProvider>
+                      </StorageBoxProvider>
+                    </CampfireProvider>
+                  </TradingProvider>
                 </InventoryProvider>
               </ToolbarProvider>
             </NotificationProvider>

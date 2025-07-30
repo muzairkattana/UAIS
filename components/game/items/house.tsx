@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
 import { Text } from "@react-three/drei"
 import Door from "./door"
+import VehicleManager from "./VehicleManager"
 
 interface HouseProps {
   position: [number, number, number]
@@ -26,12 +27,69 @@ export default function House({
   const [bedroomDoorOpen, setBedroomDoorOpen] = useState(false)
   const [fireplaceActive, setFireplaceActive] = useState(false)
 
-  // Randomize house structure
-  const houseWidth = useMemo(() => 8 + (Math.random() - 0.5) * 2, [])
-  const houseDepth = useMemo(() => 6 + (Math.random() - 0.5) * 2, [])
-  const houseHeight = useMemo(() => 3 + (Math.random() - 0.5) * 1, [])
-  const roofStyle = useMemo(() => Math.floor(Math.random() * 3), []) // 0: pyramid, 1: gabled, 2: flat
-  const wallColorVariant = useMemo(() => Math.floor(Math.random() * 4), []) // Different wall colors
+  // Set up multiple predefined house shapes/layouts
+  const houseShapes = useMemo(() => [
+    {
+      width: 8 + (Math.random() - 0.5) * 2,
+      depth: 6 + (Math.random() - 0.5) * 2,
+      height: 3 + (Math.random() - 0.5) * 1,
+      roofStyle: 0,
+      wallColorVariant: 0,
+      roofColorVariant: 0,
+      furnitureLayout: "modern",
+      hasFireplace: true,
+      hasGarden: true,
+    },
+    {
+      width: 7 + (Math.random() - 0.5) * 3,
+      depth: 7 + (Math.random() - 0.5) * 3,
+      height: 3.5 + (Math.random() - 0.5) * 1,
+      roofStyle: 1,
+      wallColorVariant: 1,
+      roofColorVariant: 1,
+      furnitureLayout: "traditional",
+      hasFireplace: false,
+      hasGarden: true,
+    },
+    {
+      width: 9 + (Math.random() - 0.5) * 2,
+      depth: 5 + (Math.random() - 0.5) * 1,
+      height: 2.8 + (Math.random() - 0.5) * 0.8,
+      roofStyle: 2,
+      wallColorVariant: 2,
+      roofColorVariant: 2,
+      furnitureLayout: "minimalist",
+      hasFireplace: true,
+      hasGarden: false,
+    },
+    {
+      width: 8 + (Math.random() - 0.5) * 3,
+      depth: 6 + (Math.random() - 0.5) * 2,
+      height: 3 + (Math.random() - 0.5) * 1,
+      roofStyle: 1,
+      wallColorVariant: 3,
+      roofColorVariant: 0,
+      furnitureLayout: "luxury",
+      hasFireplace: true,
+      hasGarden: true,
+    },
+  ], [])
+
+  // Choose a random house shape/layout
+  const [shapeIndex, setShapeIndex] = useState(() => Math.floor(Math.random() * houseShapes.length))
+
+  // Extract current shape details
+  const { 
+    width: houseWidth, 
+    depth: houseDepth, 
+    height: houseHeight, 
+    roofStyle, 
+    wallColorVariant, 
+    roofColorVariant,
+    furnitureLayout,
+    hasFireplace,
+    hasGarden
+  } = houseShapes[shapeIndex]
 
   // Materials with color variations
   const wallColors = ["#8B7355", "#CD853F", "#D2B48C", "#F4A460"]
@@ -41,11 +99,12 @@ export default function House({
     metalness: 0.1,
   }), [wallColorVariant])
 
+  const roofColors = ["#654321", "#8B4513", "#556B2F"]
   const roofMaterial = useMemo(() => new THREE.MeshStandardMaterial({
-    color: "#654321", // Dark brown roof
+    color: roofColors[roofColorVariant],
     roughness: 0.9,
     metalness: 0.05,
-  }), [])
+  }), [roofColorVariant])
 
   const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({
     color: "#A0522D", // Wooden floor
@@ -254,6 +313,32 @@ export default function House({
           id={`${id}-door`}
         />
 
+        {/* Door Control Button */}
+        <group position={[1.5, 1.2, 3.2]}>
+          <mesh
+            onClick={handleDoorClick}
+            onPointerEnter={(e) => (e.object.material.color.set('#FF6B6B'))}
+            onPointerLeave={(e) => (e.object.material.color.set('#FF4444'))}
+          >
+            <boxGeometry args={[0.2, 0.1, 0.05]} />
+            <meshStandardMaterial color="#FF4444" />
+          </mesh>
+          <mesh position={[0, -0.08, 0]}>
+            <boxGeometry args={[0.25, 0.05, 0.1]} />
+            <meshStandardMaterial color="#DCDCDC" />
+          </mesh>
+          {/* Button label */}
+          <Text
+            position={[0, -0.15, 0.06]}
+            fontSize={0.05}
+            color="#000000"
+            anchorX="center"
+            anchorY="middle"
+          >
+            DOOR
+          </Text>
+        </group>
+
         {/* Sign */}
         <group position={[0, houseHeight - 0.5, houseDepth / 2 + 0.2]}>
           <mesh>
@@ -424,44 +509,46 @@ export default function House({
             </mesh>
           </group>
 
-          {/* Fireplace */}
-          <group position={[0, 0.8, -2.8]}>
-            {/* Fireplace base */}
-            <mesh position={[0, 0, 0]}>
-              <boxGeometry args={[1.5, 1.6, 0.3]} />
-              <meshStandardMaterial color="#696969" roughness={0.9} />
-            </mesh>
-            {/* Fireplace opening */}
-            <mesh position={[0, -0.2, 0.12]}>
-              <boxGeometry args={[1.1, 0.8, 0.15]} />
-              <meshStandardMaterial color="#2F4F4F" roughness={0.9} />
-            </mesh>
-            {/* Mantle */}
-            <mesh position={[0, 0.5, 0.2]}>
-              <boxGeometry args={[1.7, 0.15, 0.3]} />
-              <primitive object={tableMaterial} />
-            </mesh>
-            {/* Fire effect (when active) */}
-            {fireplaceActive && (
-              <>
-                <pointLight
-                  position={[0, -0.2, 0.15]}
-                  intensity={1.5}
-                  distance={6}
-                  color="#FF4500"
-                  castShadow
-                />
-                <mesh position={[0, -0.2, 0.15]}>
-                  <sphereGeometry args={[0.1, 8, 8]} />
-                  <meshStandardMaterial
-                    color="#FF6347"
-                    emissive="#FF4500"
-                    emissiveIntensity={0.5}
+          {/* Fireplace - Conditional based on layout */}
+          {hasFireplace && (
+            <group position={[0, 0.8, -2.8]}>
+              {/* Fireplace base */}
+              <mesh position={[0, 0, 0]}>
+                <boxGeometry args={[1.5, 1.6, 0.3]} />
+                <meshStandardMaterial color="#696969" roughness={0.9} />
+              </mesh>
+              {/* Fireplace opening */}
+              <mesh position={[0, -0.2, 0.12]}>
+                <boxGeometry args={[1.1, 0.8, 0.15]} />
+                <meshStandardMaterial color="#2F4F4F" roughness={0.9} />
+              </mesh>
+              {/* Mantle */}
+              <mesh position={[0, 0.5, 0.2]}>
+                <boxGeometry args={[1.7, 0.15, 0.3]} />
+                <primitive object={tableMaterial} />
+              </mesh>
+              {/* Fire effect (when active) */}
+              {fireplaceActive && (
+                <>
+                  <pointLight
+                    position={[0, -0.2, 0.15]}
+                    intensity={1.5}
+                    distance={6}
+                    color="#FF4500"
+                    castShadow
                   />
-                </mesh>
-              </>
-            )}
-          </group>
+                  <mesh position={[0, -0.2, 0.15]}>
+                    <sphereGeometry args={[0.1, 8, 8]} />
+                    <meshStandardMaterial
+                      color="#FF6347"
+                      emissive="#FF4500"
+                      emissiveIntensity={0.5}
+                    />
+                  </mesh>
+                </>
+              )}
+            </group>
+          )}
         </group>
 
         {/* KITCHEN (Right side) */}
@@ -628,6 +715,128 @@ export default function House({
               <primitive object={tableMaterial} />
             </mesh>
           </group>
+        </group>
+
+        {/* WASHROOM (Back-Right) */}
+        <group position={[2.5, 1.5, -2.25]}>
+          {/* Washroom wall divider */}
+          <mesh position={[-0.5, 0, 0]}>
+            <boxGeometry args={[0.15, 3, 1.5]} />
+            <primitive object={wallMaterial} />
+          </mesh>
+
+          {/* Toilet */}
+          <group position={[0.2, 0.4, 0.3]}>
+            {/* Toilet base */}
+            <mesh position={[0, 0, 0]}>
+              <boxGeometry args={[0.4, 0.4, 0.4]} />
+              <meshStandardMaterial color="#E6E8FA" />
+            </mesh>
+            {/* Toilet tank */}
+            <mesh position={[0, 0.4, -0.1]}>
+              <boxGeometry args={[0.4, 0.4, 0.2]} />
+              <meshStandardMaterial color="#E6E8FA" />
+            </mesh>
+            {/* Toilet seat */}
+            <mesh position={[0, 0.2, 0.1]}>
+              <boxGeometry args={[0.38, 0.05, 0.38]} />
+              <meshStandardMaterial color="#DCDCDC" />
+            </mesh>
+          </group>
+
+          {/* Sink */}
+          <group position={[-0.2, 0.7, -0.3]}>
+            <mesh position={[0, 0, 0]}>
+              <boxGeometry args={[0.5, 0.3, 0.4]} />
+              <meshStandardMaterial color="#E6E8FA" />
+            </mesh>
+            {/* Faucet */}
+            <mesh position={[0, 0.2, 0]}>
+              <cylinderGeometry args={[0.02, 0.02, 0.1, 12]} />
+              <meshStandardMaterial color="#C0C0C0" metalness={0.9} />
+            </mesh>
+          </group>
+        </group>
+
+        {/* MODERN SCREEN/TV */}
+        <group position={[0, 1.8, -2.9]}>
+          {/* TV Mount/Stand */}
+          <mesh position={[0, -0.3, 0]}>
+            <boxGeometry args={[0.3, 0.6, 0.1]} />
+            <meshStandardMaterial color="#2F2F2F" metalness={0.8} roughness={0.2} />
+          </mesh>
+          
+          {/* TV Screen Frame */}
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[2.5, 1.4, 0.08]} />
+            <meshStandardMaterial color="#1a1a1a" metalness={0.9} roughness={0.1} />
+          </mesh>
+          
+          {/* TV Screen Display */}
+          <mesh position={[0, 0, 0.041]}>
+            <boxGeometry args={[2.3, 1.2, 0.01]} />
+            <meshStandardMaterial 
+              color="#0f0f23" 
+              emissive="#001122" 
+              emissiveIntensity={0.3}
+              metalness={0.1} 
+              roughness={0.8} 
+            />
+          </mesh>
+          
+          {/* Screen Content */}
+          <Text
+            position={[0, 0.3, 0.045]}
+            fontSize={0.12}
+            color="#00ff88"
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={2.2}
+            textAlign="center"
+          >
+            UZAIR AI STUDIO
+          </Text>
+          <Text
+            position={[0, 0.1, 0.045]}
+            fontSize={0.08}
+            color="#88ccff"
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={2.2}
+            textAlign="center"
+          >
+            Modern Smart Home
+          </Text>
+          <Text
+            position={[0, -0.1, 0.045]}
+            fontSize={0.06}
+            color="#ffaa00"
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={2.2}
+            textAlign="center"
+          >
+            Temperature: 22°C
+          </Text>
+          <Text
+            position={[0, -0.25, 0.045]}
+            fontSize={0.06}
+            color="#ff6666"
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={2.2}
+            textAlign="center"
+          >
+            Welcome Home!
+          </Text>
+          
+          {/* Screen Light Effect */}
+          <pointLight
+            position={[0, 0, 0.1]}
+            intensity={0.5}
+            distance={3}
+            color="#4488ff"
+          />
         </group>
 
         {/* DECORATIVE ITEMS */}
@@ -830,9 +1039,117 @@ export default function House({
         </mesh>
       </group>
 
-      {/* Simple collision box for house walls (invisible) */}
-      <mesh position={[0, 1.5, 0]} visible={false}>
-        <boxGeometry args={[8.2, 3, 6.2]} />
+      {/* Garden Area - Conditional based on layout */}
+      {hasGarden && (
+        <group position={[-5.5, 0, 0]}>
+          {/* Grass patch */}
+          <mesh position={[0, 0.05, 0]}>
+            <boxGeometry args={[3, 0.1, 8]} />
+            <meshStandardMaterial color="#228B22" roughness={0.9} />
+          </mesh>
+
+          {/* Fixed Flowers - Static positions to prevent movement */}
+          <group position={[-1, 0.2, -3]}>
+            <mesh position={[0, 0, 0]}>
+              <cylinderGeometry args={[0.02, 0.02, 0.2, 8]} />
+              <meshStandardMaterial color="#32CD32" />
+            </mesh>
+            <mesh position={[0, 0.1, 0]}>
+              <sphereGeometry args={[0.05, 16, 16]} />
+              <meshStandardMaterial color="#FF6B6B" />
+            </mesh>
+          </group>
+          <group position={[0.5, 0.2, -2]}>
+            <mesh position={[0, 0, 0]}>
+              <cylinderGeometry args={[0.02, 0.02, 0.2, 8]} />
+              <meshStandardMaterial color="#32CD32" />
+            </mesh>
+            <mesh position={[0, 0.1, 0]}>
+              <sphereGeometry args={[0.05, 16, 16]} />
+              <meshStandardMaterial color="#4ECDC4" />
+            </mesh>
+          </group>
+          <group position={[-0.8, 0.2, 1]}>
+            <mesh position={[0, 0, 0]}>
+              <cylinderGeometry args={[0.02, 0.02, 0.2, 8]} />
+              <meshStandardMaterial color="#32CD32" />
+            </mesh>
+            <mesh position={[0, 0.1, 0]}>
+              <sphereGeometry args={[0.05, 16, 16]} />
+              <meshStandardMaterial color="#FFE66D" />
+            </mesh>
+          </group>
+          <group position={[1, 0.2, 2]}>
+            <mesh position={[0, 0, 0]}>
+              <cylinderGeometry args={[0.02, 0.02, 0.2, 8]} />
+              <meshStandardMaterial color="#32CD32" />
+            </mesh>
+            <mesh position={[0, 0.1, 0]}>
+              <sphereGeometry args={[0.05, 16, 16]} />
+              <meshStandardMaterial color="#A8E6CF" />
+            </mesh>
+          </group>
+          <group position={[-0.2, 0.2, 3]}>
+            <mesh position={[0, 0, 0]}>
+              <cylinderGeometry args={[0.02, 0.02, 0.2, 8]} />
+              <meshStandardMaterial color="#32CD32" />
+            </mesh>
+            <mesh position={[0, 0.1, 0]}>
+              <sphereGeometry args={[0.05, 16, 16]} />
+              <meshStandardMaterial color="#FF8B94" />
+            </mesh>
+          </group>
+        </group>
+      )}
+
+      {/* VEHICLES - Parked outside in front of house */}
+      <VehicleManager />
+
+      {/* Individual Wall Collision Boxes (invisible) */}
+      {/* Front wall collision - left part */}
+      <mesh position={[-2.5, 1.5, 3]} visible={false}>
+        <boxGeometry args={[3.2, 3.2, 0.3]} />
+        <meshStandardMaterial transparent opacity={0} />
+      </mesh>
+      {/* Front wall collision - right part */}
+      <mesh position={[2.5, 1.5, 3]} visible={false}>
+        <boxGeometry args={[3.2, 3.2, 0.3]} />
+        <meshStandardMaterial transparent opacity={0} />
+      </mesh>
+      
+      {/* Back wall collision */}
+      <mesh position={[0, 1.5, -3]} visible={false}>
+        <boxGeometry args={[8.2, 3.2, 0.3]} />
+        <meshStandardMaterial transparent opacity={0} />
+      </mesh>
+      
+      {/* Left wall collision */}
+      <mesh position={[-4, 1.5, 0]} visible={false}>
+        <boxGeometry args={[0.3, 3.2, 6.2]} />
+        <meshStandardMaterial transparent opacity={0} />
+      </mesh>
+      
+      {/* Right wall collision */}
+      <mesh position={[4, 1.5, 0]} visible={false}>
+        <boxGeometry args={[0.3, 3.2, 6.2]} />
+        <meshStandardMaterial transparent opacity={0} />
+      </mesh>
+      
+      {/* Interior wall collision - bedroom divider */}
+      <mesh position={[-2, 1.5, 0]} visible={false}>
+        <boxGeometry args={[0.25, 3.2, 6.2]} />
+        <meshStandardMaterial transparent opacity={0} />
+      </mesh>
+      
+      {/* Interior wall collision - kitchen divider */}
+      <mesh position={[2, 1.5, 1.5]} visible={false}>
+        <boxGeometry args={[4.2, 3.2, 0.25]} />
+        <meshStandardMaterial transparent opacity={0} />
+      </mesh>
+      
+      {/* Washroom wall collision */}
+      <mesh position={[2, 1.5, -2.25]} visible={false}>
+        <boxGeometry args={[0.25, 3.2, 1.7]} />
         <meshStandardMaterial transparent opacity={0} />
       </mesh>
     </group>

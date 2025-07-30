@@ -20,6 +20,7 @@ interface ToolbarContextType {
   items: (ToolbarItem | null)[]
   setItems: (items: (ToolbarItem | null)[]) => void
   addItemToToolbar: (item: ToolbarItem) => boolean
+  removeItemFromSlot: (slot: number) => void
 }
 
 const ToolbarContext = createContext<ToolbarContextType | null>(null)
@@ -82,6 +83,18 @@ export function ToolbarProvider({ children }: { children: ReactNode }) {
     return added
   }
 
+  // Function to remove an item from a specific slot
+  const removeItemFromSlot = (slot: number): void => {
+    if (slot >= 0 && slot < items.length) {
+      setItems((prev) => {
+        const newItems = [...prev]
+        newItems[slot] = null
+        console.log(`Toolbar: Removed item from slot ${slot}`)
+        return newItems
+      })
+    }
+  }
+
   // Handle keyboard shortcuts (1-8)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -105,6 +118,7 @@ export function ToolbarProvider({ children }: { children: ReactNode }) {
         items,
         setItems,
         addItemToToolbar,
+        removeItemFromSlot,
       }}
     >
       {children}

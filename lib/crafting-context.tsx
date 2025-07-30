@@ -17,7 +17,7 @@ export interface CraftingRecipe {
     itemType: string
     quantity: number
   }[]
-  category: "tools" | "weapons" | "resources" | "structures"
+  category: "tools" | "weapons" | "resources" | "structures" | "food"
 }
 
 // Define the structure of a crafting slot
@@ -175,6 +175,85 @@ const CRAFTING_RECIPES: CraftingRecipe[] = [
       { itemType: "Stone", quantity: 150 },
     ],
     category: "structures",
+  },
+  {
+    id: "recipe_apple",
+    name: "Apple",
+    icon: "/apple.png",
+    description: "A juicy red apple.",
+    result: {
+      id: "item_apple",
+      type: "item",
+      name: "Apple",
+      icon: "/apple.png",
+    },
+    ingredients: [],
+    category: "food",
+  },
+  {
+    id: "recipe_carrot",
+    name: "Carrot",
+    icon: "/carrot.png",
+    description: "A crunchy orange carrot.",
+    result: {
+      id: "item_carrot",
+      type: "item",
+      name: "Carrot",
+      icon: "/carrot.png",
+    },
+    ingredients: [],
+    category: "food",
+  },
+  {
+    id: "recipe_cooked_fish",
+    name: "Cooked Fish",
+    icon: "/cooked-fish.png",
+    description: "A delicious cooked fish.",
+    result: {
+      id: "item_cooked_fish",
+      type: "item",
+      name: "Cooked Fish",
+      icon: "/cooked-fish.png",
+    },
+    ingredients: [
+      { itemType: "Raw Fish", quantity: 1 },
+      { itemType: "Wood", quantity: 5 },
+    ],
+    category: "food",
+  },
+  {
+    id: "recipe_stone_axe",
+    name: "Stone Axe",
+    icon: "/stone-axe.png",
+    description: "A more durable axe for chopping trees.",
+    result: {
+      id: "tool_stone_axe",
+      type: "tool",
+      name: "Stone Axe",
+      icon: "/stone-axe.png",
+    },
+    ingredients: [
+      { itemType: "Wood", quantity: 50 },
+      { itemType: "Stone", quantity: 50 },
+    ],
+    category: "tools",
+  },
+  {
+    id: "recipe_fishing_rod",
+    name: "Fishing Rod",
+    icon: "/fishing-rod.png",
+    description: "A tool for catching fish.",
+    result: {
+      id: "tool_fishing_rod",
+      type: "tool",
+      name: "Fishing Rod",
+      icon: "/fishing-rod.png",
+    },
+    ingredients: [
+      { itemType: "Wood", quantity: 100 },
+      { itemType: "Stone", quantity: 10 },
+    ],
+    category: "tools",
   },
 ]
 

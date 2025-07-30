@@ -9,6 +9,7 @@ import { useSoundManager } from "@/lib/sound-manager"
 import { useInventory } from "@/lib/inventory-context"
 import type { StoneInstance } from "@/types/stone-instance"
 import type { Wall } from "@/lib/wall-generator" // Declare the Wall variable
+import { useVehicle } from "@/lib/vehicle-context"
 
 // Define a type for storage boxes
 interface StorageBoxInstance {
@@ -538,7 +539,32 @@ export default function Player({
     // CRITICAL FIX: When disabled or toggling inventory, ONLY update position
     // DO NOT touch camera rotation at all
     if (disabled || isTogglingInventory) {
-      camera.position.copy(playerPosition.current)
+      // If disabled due to being in a vehicle, update player position to follow vehicle
+      if (disabled && !isTogglingInventory) {
+        try {
+          const { vehicleState, getVehicleOffset } = useVehicle()
+          if (vehicleState.isInVehicle && vehicleState.activeVehicle) {
+            // Calculate player position based on vehicle position and offset
+            const vehicleOffset = getVehicleOffset(vehicleState.activeVehicle)
+            const newPlayerPosition = vehicleState.vehiclePosition.clone().add(vehicleOffset)
+            
+            // Update player position to follow the vehicle
+            playerPosition.current.copy(newPlayerPosition)
+            
+            // Update camera position to match
+            camera.position.copy(playerPosition.current)
+          } else {
+            // Not in vehicle, just copy current position
+            camera.position.copy(playerPosition.current)
+          }
+        } catch (error) {
+          // Fallback if vehicle context is not available
+          camera.position.copy(playerPosition.current)
+        }
+      } else {
+        // Just toggling inventory, maintain current position
+        camera.position.copy(playerPosition.current)
+      }
       // DO NOT TOUCH camera.rotation here!
       return
     }
