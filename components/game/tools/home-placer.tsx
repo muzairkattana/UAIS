@@ -46,8 +46,8 @@ export default function HomePlacer({
   const getTerrainHeight = (x: number, z: number): number => {
     if (!terrainHeightData || terrainHeightData.length === 0) return 0
 
-    const terrainWidth = 400
-    const terrainDepth = 400
+    const terrainWidth = 800
+    const terrainDepth = 800
     const gridWidth = terrainHeightData[0].length
     const gridDepth = terrainHeightData.length
 
@@ -226,12 +226,9 @@ export default function HomePlacer({
       onHomePlaced([previewPosition.x, previewPosition.y, previewPosition.z])
     }
 
-    // Remove building plan from inventory
-    removeItem("tool_building_plan")
-
     // Show success notification
     addNotification({
-      message: "Home construction site marked! Build your foundation first.",
+      message: "House constructed successfully!",
       type: "success",
       icon: "/house.png",
     })

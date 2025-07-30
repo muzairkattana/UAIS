@@ -3,6 +3,7 @@
 import { useRef, useMemo, useState } from "react"
 import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
+import { Text } from "@react-three/drei"
 import Door from "./door"
 
 interface HouseProps {
@@ -25,12 +26,20 @@ export default function House({
   const [bedroomDoorOpen, setBedroomDoorOpen] = useState(false)
   const [fireplaceActive, setFireplaceActive] = useState(false)
 
-  // Materials
+  // Randomize house structure
+  const houseWidth = useMemo(() => 8 + (Math.random() - 0.5) * 2, [])
+  const houseDepth = useMemo(() => 6 + (Math.random() - 0.5) * 2, [])
+  const houseHeight = useMemo(() => 3 + (Math.random() - 0.5) * 1, [])
+  const roofStyle = useMemo(() => Math.floor(Math.random() * 3), []) // 0: pyramid, 1: gabled, 2: flat
+  const wallColorVariant = useMemo(() => Math.floor(Math.random() * 4), []) // Different wall colors
+
+  // Materials with color variations
+  const wallColors = ["#8B7355", "#CD853F", "#D2B48C", "#F4A460"]
   const wallMaterial = useMemo(() => new THREE.MeshStandardMaterial({
-    color: "#8B7355", // Warm brown wood
+    color: wallColors[wallColorVariant],
     roughness: 0.8,
     metalness: 0.1,
-  }), [])
+  }), [wallColorVariant])
 
   const roofMaterial = useMemo(() => new THREE.MeshStandardMaterial({
     color: "#654321", // Dark brown roof
@@ -182,23 +191,36 @@ export default function House({
           </mesh>
         </group>
 
-        {/* Roof */}
-        <group position={[0, 3.5, 0]}>
-          {/* Main roof sections */}
-          <mesh position={[0, 0.5, -1]} rotation={[Math.PI / 6, 0, 0]}>
-            <boxGeometry args={[8.5, 0.2, 2.5]} />
-            <primitive object={roofMaterial} />
-          </mesh>
-          <mesh position={[0, 0.5, 1]} rotation={[-Math.PI / 6, 0, 0]}>
-            <boxGeometry args={[8.5, 0.2, 2.5]} />
-            <primitive object={roofMaterial} />
-          </mesh>
-          
-          {/* Roof ridge */}
-          <mesh position={[0, 1, 0]}>
-            <boxGeometry args={[8.5, 0.2, 0.3]} />
-            <primitive object={roofMaterial} />
-          </mesh>
+        {/* Dynamic Roof */}
+        <group position={[0, houseHeight + 0.5, 0]}>
+          {roofStyle === 0 && ( // Pyramid roof
+            <mesh position={[0, 0.5, 0]}>
+              <coneGeometry args={[Math.max(houseWidth, houseDepth) * 0.6, 2, 4]} />
+              <primitive object={roofMaterial} />
+            </mesh>
+          )}
+          {roofStyle === 1 && ( // Gabled roof
+            <>
+              <mesh position={[0, 0.5, -houseDepth * 0.15]} rotation={[Math.PI / 6, 0, 0]}>
+                <boxGeometry args={[houseWidth + 0.5, 0.2, houseDepth * 0.4]} />
+                <primitive object={roofMaterial} />
+              </mesh>
+              <mesh position={[0, 0.5, houseDepth * 0.15]} rotation={[-Math.PI / 6, 0, 0]}>
+                <boxGeometry args={[houseWidth + 0.5, 0.2, houseDepth * 0.4]} />
+                <primitive object={roofMaterial} />
+              </mesh>
+              <mesh position={[0, 1, 0]}>
+                <boxGeometry args={[houseWidth + 0.5, 0.2, 0.3]} />
+                <primitive object={roofMaterial} />
+              </mesh>
+            </>
+          )}
+          {roofStyle === 2 && ( // Flat roof
+            <mesh position={[0, 0.2, 0]}>
+              <boxGeometry args={[houseWidth + 0.5, 0.3, houseDepth + 0.5]} />
+              <primitive object={roofMaterial} />
+            </mesh>
+          )}
         </group>
 
         {/* Porch/Balcony */}
@@ -226,11 +248,30 @@ export default function House({
 
         {/* Door */}
         <Door
-          position={[0, 0, 3.1]}
+          position={[0, 0, houseDepth / 2 + 0.1]}
           isOpen={isDoorOpen}
           scale={1.2}
           id={`${id}-door`}
         />
+
+        {/* Sign */}
+        <group position={[0, houseHeight - 0.5, houseDepth / 2 + 0.2]}>
+          <mesh>
+            <boxGeometry args={[2.2, 0.7, 0.1]} />
+            <meshStandardMaterial color="#SaddleBrown" />
+          </mesh>
+          <Text
+            position={[0, 0, 0.06]}
+            fontSize={0.2}
+            color="#FFFFFF"
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={2}
+            textAlign="center"
+          >
+            Uzair AI Studio Construction
+          </Text>
+        </group>
 
         {/* Interior Room Dividers */}
         {/* Bedroom wall divider */}

@@ -28,6 +28,7 @@ import Hatchet from "./tools/hatchet"
 import Pickaxe from "./tools/pickaxe"
 import BuildingPlan from "./tools/building-plan"
 import HomePlacer from "./tools/home-placer"
+import WallPlacer from "./tools/wall-placer"
 
 // Import item manager
 import { useItemManager } from "@/lib/item-manager-context"
@@ -44,6 +45,7 @@ import Door from "./items/door"
 import House from "./items/house"
 import HouseInteraction from "./items/house-interaction"
 import AdvancedHouseInteraction from "./items/advanced-house-interaction"
+import StoneWall from "./items/stone-wall"
 import { findBestHouseLocation } from "./utils/house-placement"
 
 // Import different house types for village
@@ -165,7 +167,9 @@ export default function GameScene({
   const [terrainReady, setTerrainReady] = useState(false)
   const [houseLocation, setHouseLocation] = useState<{ position: THREE.Vector3; rotation: number } | null>(null)
   // Player-built houses
-  const [playerHouses, setPlayerHouses] = useState<Array<{id: string, position: [number, number, number]}>>([]) 
+  const [playerHouses, setPlayerHouses] = useState<Array<{id: string, position: [number, number, number]}>>([])
+  // Player-built walls
+  const [playerWalls, setPlayerWalls] = useState<Array<{id: string, position: [number, number, number]}>>([])
   // Village houses are now managed in global context
   const [isDoorOpen, setIsDoorOpen] = useState(false)
   const [keys, setKeys] = useState({
@@ -811,18 +815,16 @@ export default function GameScene({
         />
       )
     } else if (currentItem.id.startsWith("item_stone_wall")) {
-      // For now, use the existing building plan placer - you can create a specific wall placer later
       return (
-        <HomePlacer
+        <WallPlacer
           isLocked={isLocked}
           terrainHeightData={terrainHeightData || localTerrainHeightData}
-          onHomePlaced={(position) => {
-            // For stone walls, we'll create a simple wall structure
+          onWallPlaced={(position) => {
             const newWall = {
               id: `stone-wall-${Date.now()}`,
               position
             }
-            setPlayerHouses(prev => [...prev, newWall])
+            setPlayerWalls(prev => [...prev, newWall])
             console.log('Stone wall placed at:', position)
             
             // Remove the item from inventory after placing
@@ -987,6 +989,7 @@ export default function GameScene({
       {terrainGeometry && (
         <mesh
           ref={terrainRef}
+          name="terrain"
           receiveShadow={settings.graphics?.enableShadows}
           geometry={terrainGeometry}
           material={terrainMaterial}
@@ -1266,6 +1269,15 @@ export default function GameScene({
           position={house.position}
           rotation={[0, 0, 0]}
           id={house.id}
+        />
+      ))}
+
+      {/* Player-built walls */}
+      {playerWalls.map((wall) => (
+        <StoneWall
+          key={wall.id}
+          id={wall.id}
+          position={wall.position}
         />
       ))}
 

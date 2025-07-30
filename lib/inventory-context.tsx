@@ -182,8 +182,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   // Simplified Tab key handler to toggle inventory
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Handle I key to toggle inventory  
-      if (e.key === "i" || e.key === "I") {
+      // Handle Tab key to toggle inventory  
+      if (e.key === "Tab") {
         e.preventDefault()
         e.stopPropagation()
 
